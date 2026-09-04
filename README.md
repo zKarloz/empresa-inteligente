@@ -2,9 +2,9 @@
 
 ## Antes de empezar
 
-Tener instalado los siguientes programas: Git, Node.js y Visual Studio Code.
+**Tener instalado los siguientes programas:** Git, Node.js y Visual Studio Code.
 
-Recomendaciones: Instalar extensiones: Material Icon Theme, Error Lens y Live Share.
+**Recomendaciones:** Instalar extensiones: Material Icon Theme, Error Lens y Live Share.
 
 ## Instrucciones para trabajar localmente
 
@@ -24,5 +24,5 @@ Recomendaciones: Instalar extensiones: Material Icon Theme, Error Lens y Live Sh
 6. Una vez instalado los *node_modules*, iniciar el servidor para interactuar con la página web:
 - `npm run dev`
 
-> [!NOTE]
+> [!NOTA]
 > Si te salió algún error consúltame para ayudarte, normal te respondo.
