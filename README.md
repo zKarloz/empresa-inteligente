@@ -9,19 +9,20 @@ Recomendaciones: Instalar extensiones: Material Icon Theme, Error Lens y Live Sh
 ## Instrucciones para trabajar localmente
 
 1. Clonar repositorio en su PC:
-`git clone https://github.com/zKarloz/empresa-inteligente.git`
+- `git clone https://github.com/zKarloz/empresa-inteligente.git`
 
 2. Abrir el repositorio clonado en Visual Studio Code
 
 3. Abrir la terminal (usar Git Bash o Command Prompt)
 
 4. Escribir en la terminal este código, para entrar a la **carpeta frontend**:
-`cd frontend`
+- `cd frontend`
 
 5. Dentro de la **carpeta frontend**, instalar los *node_modules* (esto suele tardar unos minutos):
-`npm ci`
+- `npm ci`
 
 6. Una vez instalado los *node_modules*, iniciar el servidor para interactuar con la página web:
-`npm run dev`
+- `npm run dev`
 
-NOTA: Si te salió algún error consúltame para ayudarte.
+[!NOTE]
+Si te salió algún error consúltame para ayudarte.
