@@ -24,5 +24,5 @@ Recomendaciones: Instalar extensiones: Material Icon Theme, Error Lens y Live Sh
 6. Una vez instalado los *node_modules*, iniciar el servidor para interactuar con la página web:
 - `npm run dev`
 
-[!NOTE]
-Si te salió algún error consúltame para ayudarte.
+> [!NOTE]
+> Si te salió algún error consúltame para ayudarte, normal te respondo.
