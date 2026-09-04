@@ -24,5 +24,6 @@
 6. Una vez instalado los *node_modules*, iniciar el servidor para interactuar con la página web:
 - `npm run dev`
 
-> [!NOTA]
+> [!NOTE]
 > Si te salió algún error consúltame para ayudarte, normal te respondo.
+> Por favor, todos deben tener el repositorio en su PC corriendo sin problemas.
