@@ -3,6 +3,7 @@ from sqlalchemy import text
 
 from app.api.clientes import router as clientes_router
 from app.api.comentarios import router as comentarios_router
+from app.api.tiempos_atencion import router as tiempos_router
 
 from app.database.connection import engine
 
@@ -15,6 +16,7 @@ app = FastAPI(
 
 app.include_router(clientes_router)
 app.include_router(comentarios_router)
+app.include_router(tiempos_router)
 
 
 @app.get("/")
