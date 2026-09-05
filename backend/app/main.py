@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from sqlalchemy import text
 
+from app.api.clientes import router as clientes_router
 from app.database.connection import engine
 
 
@@ -8,6 +9,9 @@ app = FastAPI(
     title="Centro Inteligente API",
     version="1.0.0",
 )
+
+
+app.include_router(clientes_router)
 
 
 @app.get("/")
