@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.connection import get_db
 from app.models.cliente import Cliente
-from app.schemas.cliente import ClienteCreate, ClienteResponse
+from app.schemas.cliente import ClienteCreate, ClienteUpdate, ClienteResponse
 
 
 router = APIRouter(
@@ -82,3 +82,65 @@ async def crear_cliente(
     await db.refresh(nuevo_cliente)
 
     return nuevo_cliente
+
+
+# ACTUALIZAR CLIENTE
+@router.put(
+    "/{cliente_id}",
+    response_model=ClienteResponse
+)
+async def actualizar_cliente(
+    cliente_id: int,
+    datos: ClienteUpdate,
+    db: AsyncSession = Depends(get_db)
+):
+    resultado = await db.execute(
+        select(Cliente).where(Cliente.id == cliente_id)
+    )
+
+    cliente = resultado.scalar_one_or_none()
+
+    if cliente is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Cliente no encontrado"
+        )
+
+    datos_actualizados = datos.model_dump(
+        exclude_unset=True
+    )
+
+    for campo, valor in datos_actualizados.items():
+        setattr(cliente, campo, valor)
+
+    await db.commit()
+    await db.refresh(cliente)
+
+    return cliente
+
+
+# ELIMINAR CLIENTE
+@router.delete(
+    "/{cliente_id}",
+    status_code=status.HTTP_204_NO_CONTENT
+)
+async def eliminar_cliente(
+    cliente_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    resultado = await db.execute(
+        select(Cliente).where(Cliente.id == cliente_id)
+    )
+
+    cliente = resultado.scalar_one_or_none()
+
+    if cliente is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Cliente no encontrado"
+        )
+
+    await db.delete(cliente)
+    await db.commit()
+
+    return None
