@@ -4,6 +4,13 @@ from pydantic import BaseModel, ConfigDict
 
 # Como queremos devolver el cliente por JSON
 
+class ClienteCreate(BaseModel):
+    nombre: str
+    email: str | None = None
+    telefono: str | None = None
+    empresa: str | None = None
+    activo: bool = True
+
 class ClienteResponse(BaseModel):
     id: int
     nombre: str
