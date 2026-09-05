@@ -7,10 +7,30 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Frontend
 node_modules
 dist
 dist-ssr
 *.local
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Variables de entorno
+.env
+.env.*
+!.env.example
+
+# Python tools / cache
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
 
 # Editor directories and files
 .vscode/*
