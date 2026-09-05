@@ -2,7 +2,9 @@
 
 ## Antes de empezar
 
-**Tener instalado los siguientes programas:** Git, Node.js y Visual Studio Code.
+**Tener instalado los siguientes programas para estre proyecto:** Git, Node.js, PostgreSQL y Visual Studio Code.
+
+**Servicios en la nube que se usarán:** Vercel (Para frontend), Render (Para backend) y Supabase (Para BD).
 
 **Recomendaciones:** Instalar extensiones: Material Icon Theme, Error Lens y Live Share.
 
