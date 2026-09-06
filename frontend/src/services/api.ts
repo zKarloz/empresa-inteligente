@@ -7,7 +7,6 @@ export async function apiFetch<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
-
   const response = await fetch(
     `${API_URL}${endpoint}`,
     {
@@ -24,6 +23,11 @@ export async function apiFetch<T>(
     throw new Error(
       `Error ${response.status}: ${response.statusText}`
     );
+  }
+
+
+  if (response.status === 204) {
+    return undefined as T;
   }
 
 

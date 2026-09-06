@@ -988,3 +988,451 @@ body {
     flex-direction: column;
   }
 }
+
+/* =========================================
+   BOTONES
+========================================= */
+
+.primary-button,
+.secondary-button,
+.edit-button,
+.delete-button {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.primary-button {
+  background: #1f6feb;
+  color: white;
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(31, 111, 235, 0.25);
+}
+
+.primary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.secondary-button {
+  background: #eef2f7;
+  color: #334155;
+  border: 1px solid #d7dee8;
+}
+
+.secondary-button:hover {
+  background: #e5eaf1;
+}
+
+.edit-button {
+  background: #e8f1ff;
+  color: #1f6feb;
+  padding: 7px 12px;
+}
+
+.edit-button:hover {
+  background: #d9e9ff;
+}
+
+.delete-button {
+  background: #fff0f0;
+  color: #c0392b;
+  padding: 7px 12px;
+}
+
+.delete-button:hover {
+  background: #ffe0e0;
+}
+
+
+/* =========================================
+   MENSAJE DE ERROR
+========================================= */
+
+.message-error {
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: #fff1f1;
+  border: 1px solid #ffcaca;
+  color: #b42318;
+  font-size: 14px;
+}
+
+
+/* =========================================
+   FORMULARIO DE CLIENTES
+========================================= */
+
+.client-form {
+  margin-top: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.form-group input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border-radius: 8px;
+  border: 1px solid #d8dee8;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 14px;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.form-group input:focus {
+  border-color: #1f6feb;
+  box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.12);
+}
+
+.checkbox-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  color: #475569;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.checkbox-group input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+
+/* =========================================
+   TABLA
+========================================= */
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.data-table {
+  width: 100%;
+  min-width: 850px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.data-table th,
+.data-table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e8edf3;
+}
+
+.data-table th {
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.data-table td {
+  color: #475569;
+}
+
+.data-table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.data-table tbody tr:hover {
+  background: #f8fbff;
+}
+
+.data-table td strong {
+  color: #1e293b;
+}
+
+
+/* =========================================
+   ESTADOS
+========================================= */
+
+.status-active,
+.status-inactive {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-active {
+  background: #e7f8ef;
+  color: #15803d;
+}
+
+.status-inactive {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+
+/* =========================================
+   ACCIONES DE TABLA
+========================================= */
+
+.table-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-header {
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 650px) {
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+
+  .table-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .edit-button,
+  .delete-button {
+    width: 100%;
+  }
+}
+
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border-radius: 8px;
+  border: 1px solid #d8dee8;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #1f6feb;
+  box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.12);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+
+.nlp-result {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid #e8edf3;
+}
+
+.nlp-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.nlp-result-card {
+  padding: 18px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e4eaf1;
+}
+
+.nlp-result-card span {
+  display: block;
+  margin-bottom: 8px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.nlp-result-card strong {
+  color: #1e293b;
+  font-size: 22px;
+}
+
+.nlp-section {
+  margin-top: 20px;
+}
+
+.nlp-section h3 {
+  margin-bottom: 12px;
+  color: #334155;
+  font-size: 15px;
+}
+
+@media (max-width: 750px) {
+  .nlp-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================
+   SCIENTIFIC DATA
+========================================= */
+
+.scientific-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.scientific-card {
+  padding: 18px;
+  border: 1px solid #e4eaf1;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.scientific-card span {
+  display: block;
+  margin-bottom: 8px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.scientific-card strong {
+  color: #1e293b;
+  font-size: 21px;
+}
+
+.scientific-result {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e8edf3;
+}
+
+.scientific-result h3 {
+  margin: 0 0 12px;
+  color: #334155;
+}
+
+.scientific-result > span {
+  display: block;
+  margin-top: 6px;
+  color: #64748b;
+}
+
+.message-success {
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border: 1px solid #b7e4c7;
+  border-radius: 8px;
+  background: #ecfdf3;
+  color: #15803d;
+  font-size: 14px;
+}
+
+
+@media (max-width: 1050px) {
+  .scientific-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+@media (max-width: 650px) {
+  .scientific-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================
+   REPORTES
+========================================= */
+
+.report-summary-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.report-categories {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+
+@media (max-width: 850px) {
+  .report-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
