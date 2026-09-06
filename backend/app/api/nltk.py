@@ -15,10 +15,12 @@ from app.models.analisis_nlp import AnalisisNLP
 from app.schemas.nlp import (
     AnalisisTextoRequest,
     AnalisisTextoResponse,
-    AnalisisNLPResponse
+    AnalisisNLPResponse,
+    ClasificacionRequest,
+    ClasificacionResponse
 )
 
-from app.services.nltk_service import analizar_texto
+from app.services.nltk_service import analizar_texto, clasificar_texto
 
 
 router = APIRouter(
@@ -36,6 +38,20 @@ async def analizar_comentario(
     datos: AnalisisTextoRequest
 ):
     resultado = analizar_texto(
+        datos.texto
+    )
+
+    return resultado
+
+
+@router.post(
+    "/clasificar",
+    response_model=ClasificacionResponse
+)
+async def clasificar_comentario(
+    datos: ClasificacionRequest
+):
+    resultado = clasificar_texto(
         datos.texto
     )
 
@@ -89,9 +105,15 @@ async def analizar_comentario_guardado(
         comentario.contenido
     )
 
+    # Clasificar texto con NLTK
+    clasificacion = clasificar_texto(
+    comentario.contenido
+    )
+
     # Crear análisis
     nuevo_analisis = AnalisisNLP(
         comentario_id=comentario.id,
+        
         idioma="es",
 
         cantidad_palabras=resultado_nlp[
@@ -106,8 +128,13 @@ async def analizar_comentario_guardado(
             "palabras_frecuentes"
         ],
 
-        categoria_detectada=None,
-        confianza=None
+        categoria_detectada=clasificacion[
+            "categoria"
+        ],
+
+        confianza=clasificacion[
+            "confianza"
+        ]
     )
 
     db.add(nuevo_analisis)

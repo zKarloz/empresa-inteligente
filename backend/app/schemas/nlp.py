@@ -20,6 +20,17 @@ class AnalisisTextoResponse(BaseModel):
     palabras_frecuentes: list[PalabraFrecuente]
 
 
+class ClasificacionRequest(BaseModel):
+    texto: str = Field(
+        min_length=1
+    )
+
+
+class ClasificacionResponse(BaseModel):
+    categoria: str
+    confianza: float
+
+
 class AnalisisNLPResponse(BaseModel):
     id: int
     comentario_id: int
