@@ -6,7 +6,8 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     String,
-    Text
+    Text,
+    func
 )
 
 from sqlalchemy.orm import Mapped, mapped_column
@@ -52,7 +53,8 @@ class Comentario(Base):
     )
 
     fecha: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True)
+        DateTime(timezone=True),
+        server_default=func.now()
     )
 
     procesado: Mapped[bool] = mapped_column(
