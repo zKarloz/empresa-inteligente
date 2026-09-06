@@ -265,3 +265,40 @@ async def optimizar(
     )
 
     return nueva_optimizacion
+
+# ============================================
+# HISTORIAL DE MÉTRICAS
+# ============================================
+
+@router.get(
+    "/metricas-guardadas",
+    response_model=list[MetricaEstadisticaResponse]
+)
+async def obtener_metricas_guardadas(
+    db: AsyncSession = Depends(get_db)
+):
+    resultado = await db.execute(
+        select(MetricaEstadistica)
+        .order_by(MetricaEstadistica.id.desc())
+    )
+
+    return resultado.scalars().all()
+
+
+# ============================================
+# HISTORIAL DE OPTIMIZACIONES
+# ============================================
+
+@router.get(
+    "/optimizaciones",
+    response_model=list[OptimizacionResponse]
+)
+async def obtener_optimizaciones(
+    db: AsyncSession = Depends(get_db)
+):
+    resultado = await db.execute(
+        select(Optimizacion)
+        .order_by(Optimizacion.id.desc())
+    )
+
+    return resultado.scalars().all()

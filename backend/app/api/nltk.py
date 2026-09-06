@@ -146,3 +146,17 @@ async def analizar_comentario_guardado(
     await db.refresh(nuevo_analisis)
 
     return nuevo_analisis
+
+@router.get(
+    "/analisis",
+    response_model=list[AnalisisNLPResponse]
+)
+async def obtener_analisis_nlp(
+    db: AsyncSession = Depends(get_db)
+):
+    resultado = await db.execute(
+        select(AnalisisNLP)
+        .order_by(AnalisisNLP.id.desc())
+    )
+
+    return resultado.scalars().all()
