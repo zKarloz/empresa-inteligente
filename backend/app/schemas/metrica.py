@@ -35,3 +35,47 @@ class MetricaEstadisticaResponse(BaseModel):
     model_config = ConfigDict(
         from_attributes=True
     )
+
+class InterpolacionRequest(BaseModel):
+    x_conocidos: list[float]
+    y_conocidos: list[float]
+    x_estimar: list[float]
+
+
+class ValorInterpolado(BaseModel):
+    x: float
+    valor_estimado: float
+
+
+class InterpolacionResponse(BaseModel):
+    resultados: list[ValorInterpolado]
+
+
+class OptimizacionRequest(BaseModel):
+    nombre: str = "Optimización de recursos"
+    descripcion: str | None = None
+
+    recurso_a_inicial: float = 2
+    recurso_b_inicial: float = 4
+
+    capacidad_minima: float = 40
+
+
+class OptimizacionResponse(BaseModel):
+    id: int
+    nombre: str
+    descripcion: str | None = None
+
+    parametros_entrada: dict
+    resultado: dict | None = None
+
+    costo_inicial: float | None = None
+    costo_optimizado: float | None = None
+
+    estado: str
+
+    created_at: datetime | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True
+    )
