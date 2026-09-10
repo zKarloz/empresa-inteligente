@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+
 import Loading from "../components/Loading";
 
 import {
@@ -22,6 +24,8 @@ import {
 
 
 function Atencion() {
+  const location = useLocation();
+
   const [clientes, setClientes] =
     useState<Cliente[]>([]);
 
@@ -106,6 +110,28 @@ function Atencion() {
   useEffect(() => {
     cargarDatos();
   }, []);
+
+  // ============================================
+  // NAVEGACIÓN DESDE EL SIDEBAR
+  // ============================================
+
+  useEffect(() => {
+    if (!location.hash || cargando) {
+      return;
+    }
+
+    const id = location.hash.replace("#", "");
+
+    const elemento =
+      document.getElementById(id);
+
+    if (elemento) {
+      elemento.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [location.hash, cargando]);
 
 
   // ============================================
@@ -321,9 +347,12 @@ function Atencion() {
 
       <section className="dashboard-grid">
 
-        {/* COMENTARIO */}
+        {/* REGISTRAR SOLICITUD / COMENTARIO */}
 
-        <article className="dashboard-panel">
+        <article
+          id="solicitudes"
+          className="dashboard-panel"
+        >
 
           <div className="panel-header">
             <div>
@@ -631,7 +660,7 @@ function Atencion() {
       {/* COMENTARIOS */}
       {/* ===================================== */}
 
-      <section className="dashboard-panel">
+      <section id="comentarios" className="dashboard-panel">
 
         <div className="panel-header">
           <div>
@@ -744,7 +773,7 @@ function Atencion() {
       {/* TIEMPOS */}
       {/* ===================================== */}
 
-      <section className="dashboard-panel">
+      <section id="tiempos" className="dashboard-panel">
 
         <div className="panel-header">
           <div>

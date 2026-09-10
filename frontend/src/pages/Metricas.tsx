@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+
 import Loading from "../components/Loading";
 
 import {
@@ -14,16 +16,34 @@ import {
 
 
 function Metricas() {
+
+  // ============================================
+  // NAVEGACIÓN
+  // ============================================
+
+  const location = useLocation();
+
+
+  // ============================================
+  // ESTADOS GENERALES
+  // ============================================
+
   const [estadisticas, setEstadisticas] =
     useState<Estadisticas | null>(null);
 
   const [metricaGuardada, setMetricaGuardada] =
     useState<MetricaGuardada | null>(null);
 
-  const [resultadoInterpolacion, setResultadoInterpolacion] =
+  const [
+    resultadoInterpolacion,
+    setResultadoInterpolacion,
+  ] =
     useState<InterpolacionResponse | null>(null);
 
-  const [resultadoOptimizacion, setResultadoOptimizacion] =
+  const [
+    resultadoOptimizacion,
+    setResultadoOptimizacion,
+  ] =
     useState<OptimizacionResponse | null>(null);
 
   const [cargando, setCargando] =
@@ -57,11 +77,21 @@ function Metricas() {
   // OPTIMIZACIÓN
   // ============================================
 
-  const [nombreOptimizacion, setNombreOptimizacion] =
-    useState("Optimización de recursos");
+  const [
+    nombreOptimizacion,
+    setNombreOptimizacion,
+  ] =
+    useState(
+      "Optimización de recursos"
+    );
 
-  const [descripcionOptimizacion, setDescripcionOptimizacion] =
-    useState("Escenario para reducir costos");
+  const [
+    descripcionOptimizacion,
+    setDescripcionOptimizacion,
+  ] =
+    useState(
+      "Escenario para reducir costos"
+    );
 
   const [recursoA, setRecursoA] =
     useState("2");
@@ -69,7 +99,10 @@ function Metricas() {
   const [recursoB, setRecursoB] =
     useState("4");
 
-  const [capacidadMinima, setCapacidadMinima] =
+  const [
+    capacidadMinima,
+    setCapacidadMinima,
+  ] =
     useState("40");
 
 
@@ -85,9 +118,11 @@ function Metricas() {
         await obtenerEstadisticas();
 
       setEstadisticas(datos);
+
       setError(null);
 
     } catch (error) {
+
       console.error(error);
 
       setError(
@@ -95,6 +130,7 @@ function Metricas() {
       );
 
     } finally {
+
       setCargando(false);
     }
   }
@@ -106,36 +142,77 @@ function Metricas() {
 
 
   // ============================================
+  // NAVEGACIÓN DESDE EL SIDEBAR
+  // ============================================
+
+  useEffect(() => {
+
+    if (!location.hash) {
+      return;
+    }
+
+    const id =
+      location.hash.replace("#", "");
+
+    const elemento =
+      document.getElementById(id);
+
+    if (elemento) {
+      elemento.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+
+  }, [location.hash]);
+
+
+  // ============================================
   // CONVERTIR "1, 2, 3" → [1, 2, 3]
   // ============================================
 
   function convertirListaNumeros(
     texto: string
   ): number[] {
+
     const partes = texto
       .split(",")
-      .map((parte) => parte.trim());
+      .map(
+        (parte) =>
+          parte.trim()
+      );
+
 
     if (
       partes.length === 0 ||
-      partes.some((parte) => parte === "")
+      partes.some(
+        (parte) =>
+          parte === ""
+      )
     ) {
+
       throw new Error(
         "Las listas deben contener números separados por comas"
       );
     }
 
-    const numeros = partes.map(Number);
+
+    const numeros =
+      partes.map(Number);
+
 
     if (
       numeros.some(
-        (numero) => !Number.isFinite(numero)
+        (numero) =>
+          !Number.isFinite(numero)
       )
     ) {
+
       throw new Error(
         "Todos los valores deben ser numéricos"
       );
     }
+
 
     return numeros;
   }
@@ -146,28 +223,41 @@ function Metricas() {
   // ============================================
 
   async function ejecutarGuardarEstadisticas() {
+
     try {
+
       setProcesando(true);
+
       setError(null);
+
       setMensaje(null);
+
 
       const resultado =
         await guardarEstadisticas();
 
-      setMetricaGuardada(resultado);
+
+      setMetricaGuardada(
+        resultado
+      );
+
 
       setMensaje(
         "Las estadísticas se guardaron correctamente."
       );
 
+
     } catch (error) {
+
       console.error(error);
 
       setError(
         "No se pudieron guardar las estadísticas"
       );
 
+
     } finally {
+
       setProcesando(false);
     }
   }
@@ -180,34 +270,54 @@ function Metricas() {
   async function ejecutarInterpolacion(
     evento: React.FormEvent<HTMLFormElement>
   ) {
+
     evento.preventDefault();
 
+
     try {
+
       setProcesando(true);
+
       setError(null);
+
       setMensaje(null);
 
+
       const x =
-        convertirListaNumeros(xConocidos);
+        convertirListaNumeros(
+          xConocidos
+        );
 
       const y =
-        convertirListaNumeros(yConocidos);
+        convertirListaNumeros(
+          yConocidos
+        );
 
       const estimar =
-        convertirListaNumeros(xEstimar);
+        convertirListaNumeros(
+          xEstimar
+        );
+
 
       const resultado =
         await interpolar({
+
           x_conocidos: x,
+
           y_conocidos: y,
+
           x_estimar: estimar,
+
         });
+
 
       setResultadoInterpolacion(
         resultado
       );
 
+
     } catch (error) {
+
       console.error(error);
 
       setError(
@@ -216,7 +326,9 @@ function Metricas() {
           : "No se pudo realizar la interpolación"
       );
 
+
     } finally {
+
       setProcesando(false);
     }
   }
@@ -229,43 +341,62 @@ function Metricas() {
   async function ejecutarOptimizacion(
     evento: React.FormEvent<HTMLFormElement>
   ) {
+
     evento.preventDefault();
 
-    const valorA = Number(recursoA);
-    const valorB = Number(recursoB);
-    const capacidad = Number(
-      capacidadMinima
-    );
+
+    const valorA =
+      Number(recursoA);
+
+    const valorB =
+      Number(recursoB);
+
+    const capacidad =
+      Number(
+        capacidadMinima
+      );
+
 
     if (
       !Number.isFinite(valorA) ||
       !Number.isFinite(valorB) ||
       !Number.isFinite(capacidad)
     ) {
+
       setError(
         "Los valores de optimización deben ser numéricos"
       );
+
       return;
     }
+
 
     if (
       valorA < 0 ||
       valorB < 0 ||
       capacidad <= 0
     ) {
+
       setError(
         "Los recursos no pueden ser negativos y la capacidad debe ser mayor que cero"
       );
+
       return;
     }
 
+
     try {
+
       setProcesando(true);
+
       setError(null);
+
       setMensaje(null);
+
 
       const resultado =
         await optimizar({
+
           nombre:
             nombreOptimizacion.trim() ||
             "Optimización de recursos",
@@ -274,58 +405,94 @@ function Metricas() {
             descripcionOptimizacion.trim() ||
             null,
 
-          recurso_a_inicial: valorA,
-          recurso_b_inicial: valorB,
-          capacidad_minima: capacidad,
+          recurso_a_inicial:
+            valorA,
+
+          recurso_b_inicial:
+            valorB,
+
+          capacidad_minima:
+            capacidad,
+
         });
+
 
       setResultadoOptimizacion(
         resultado
       );
 
+
     } catch (error) {
+
       console.error(error);
 
       setError(
         "No se pudo realizar la optimización"
       );
 
+
     } finally {
+
       setProcesando(false);
     }
   }
 
 
+  // ============================================
+  // INTERFAZ
+  // ============================================
+
   return (
+
     <main className="dashboard-page">
 
+
+      {/* ===================================== */}
+      {/* ENCABEZADO */}
+      {/* ===================================== */}
+
       <header className="dashboard-header">
+
         <div>
-          <h1>Scientific Data</h1>
+
+          <h1>
+            Scientific Data
+          </h1>
 
           <p>
             Estadística, interpolación y
             optimización mediante SciPy
           </p>
+
         </div>
+
 
         <span className="panel-badge">
           SciPy
         </span>
+
       </header>
 
 
+      {/* ===================================== */}
+      {/* MENSAJES */}
+      {/* ===================================== */}
+
       {error && (
+
         <div className="message-error">
           {error}
         </div>
+
       )}
 
 
       {mensaje && (
+
         <div className="message-success">
           {mensaje}
         </div>
+
       )}
 
 
@@ -333,10 +500,15 @@ function Metricas() {
       {/* ESTADÍSTICAS */}
       {/* ===================================== */}
 
-      <section className="dashboard-panel">
+      <section
+        id="estadisticas"
+        className="dashboard-panel"
+      >
 
         <div className="panel-header">
+
           <div>
+
             <h2>
               Estadísticas de atención
             </h2>
@@ -345,7 +517,9 @@ function Metricas() {
               Indicadores calculados con los
               tiempos registrados
             </p>
+
           </div>
+
 
           <button
             type="button"
@@ -354,123 +528,201 @@ function Metricas() {
               ejecutarGuardarEstadisticas
             }
             disabled={
-              procesando || !estadisticas
+              procesando ||
+              !estadisticas
             }
           >
+
             Guardar métricas
+
           </button>
+
         </div>
 
 
         {cargando ? (
-          <Loading texto="Calculando estadísticas..." />
-          
+
+          <Loading
+            texto="Calculando estadísticas..."
+          />
+
         ) : estadisticas ? (
 
           <div className="scientific-grid">
 
+
             <div className="scientific-card">
-              <span>Registros</span>
+
+              <span>
+                Registros
+              </span>
 
               <strong>
-                {estadisticas.cantidad}
+                {
+                  estadisticas
+                    .cantidad
+                }
               </strong>
+
             </div>
 
 
             <div className="scientific-card">
-              <span>Media</span>
+
+              <span>
+                Media
+              </span>
 
               <strong>
-                {estadisticas.media.toFixed(2)}
+                {
+                  estadisticas
+                    .media
+                    .toFixed(2)
+                }
               </strong>
+
             </div>
 
 
             <div className="scientific-card">
-              <span>Mediana</span>
+
+              <span>
+                Mediana
+              </span>
 
               <strong>
-                {estadisticas.mediana.toFixed(2)}
+                {
+                  estadisticas
+                    .mediana
+                    .toFixed(2)
+                }
               </strong>
+
             </div>
 
 
             <div className="scientific-card">
+
               <span>
                 Desviación estándar
               </span>
 
               <strong>
-                {estadisticas
-                  .desviacion_estandar
-                  .toFixed(2)}
+                {
+                  estadisticas
+                    .desviacion_estandar
+                    .toFixed(2)
+                }
               </strong>
+
             </div>
 
 
             <div className="scientific-card">
-              <span>Mínimo</span>
+
+              <span>
+                Mínimo
+              </span>
 
               <strong>
-                {estadisticas.minimo.toFixed(2)}
+                {
+                  estadisticas
+                    .minimo
+                    .toFixed(2)
+                }
               </strong>
+
             </div>
 
 
             <div className="scientific-card">
-              <span>Máximo</span>
+
+              <span>
+                Máximo
+              </span>
 
               <strong>
-                {estadisticas.maximo.toFixed(2)}
+                {
+                  estadisticas
+                    .maximo
+                    .toFixed(2)
+                }
               </strong>
+
             </div>
 
 
             <div className="scientific-card">
-              <span>Percentil 25</span>
+
+              <span>
+                Percentil 25
+              </span>
 
               <strong>
-                {estadisticas
-                  .percentil_25
-                  .toFixed(2)}
+                {
+                  estadisticas
+                    .percentil_25
+                    .toFixed(2)
+                }
               </strong>
+
             </div>
 
 
             <div className="scientific-card">
-              <span>Percentil 75</span>
+
+              <span>
+                Percentil 75
+              </span>
 
               <strong>
-                {estadisticas
-                  .percentil_75
-                  .toFixed(2)}
+                {
+                  estadisticas
+                    .percentil_75
+                    .toFixed(2)
+                }
               </strong>
+
             </div>
+
 
           </div>
 
         ) : (
+
           <p>
             No existen datos estadísticos.
           </p>
+
         )}
 
 
         {metricaGuardada && (
+
           <div className="scientific-result">
+
             <strong>
               Última métrica guardada:
             </strong>
 
+
             <span>
+
               ID #{metricaGuardada.id}
+
               {" · "}
-              {metricaGuardada
-                .cantidad_registros}
+
+              {
+                metricaGuardada
+                  .cantidad_registros
+              }
+
               {" "}registros
+
             </span>
+
           </div>
+
         )}
 
       </section>
@@ -480,35 +732,51 @@ function Metricas() {
       {/* INTERPOLACIÓN */}
       {/* ===================================== */}
 
-      <section className="dashboard-panel">
+      <section
+        id="interpolacion"
+        className="dashboard-panel"
+      >
 
         <div className="panel-header">
+
           <div>
-            <h2>Interpolación</h2>
+
+            <h2>
+              Interpolación
+            </h2>
 
             <p>
               Estimar valores intermedios a
               partir de datos conocidos
             </p>
+
           </div>
+
 
           <span className="panel-badge">
             interp1d
           </span>
+
         </div>
 
 
         <form
           className="client-form"
-          onSubmit={ejecutarInterpolacion}
+          onSubmit={
+            ejecutarInterpolacion
+          }
         >
+
 
           <div className="form-grid">
 
+
             <div className="form-group">
+
               <label>
                 Valores X conocidos
               </label>
+
 
               <input
                 type="text"
@@ -520,13 +788,16 @@ function Metricas() {
                 }
                 placeholder="1, 3, 4, 6"
               />
+
             </div>
 
 
             <div className="form-group">
+
               <label>
                 Valores Y conocidos
               </label>
+
 
               <input
                 type="text"
@@ -538,13 +809,16 @@ function Metricas() {
                 }
                 placeholder="12000, 14500, 15000, 18000"
               />
+
             </div>
 
 
             <div className="form-group">
+
               <label>
                 Valores X a estimar
               </label>
+
 
               <input
                 type="text"
@@ -556,57 +830,80 @@ function Metricas() {
                 }
                 placeholder="2, 5"
               />
+
             </div>
+
 
           </div>
 
 
           <div className="form-actions">
+
             <button
               type="submit"
               className="primary-button"
               disabled={procesando}
             >
-              Calcular interpolación
+
+              {procesando
+                ? "Procesando..."
+                : "Calcular interpolación"}
+
             </button>
+
           </div>
+
 
         </form>
 
 
         {resultadoInterpolacion && (
+
           <div className="scientific-result">
 
             <h3>
               Resultados estimados
             </h3>
 
+
             <div className="scientific-grid">
 
-              {resultadoInterpolacion
-                .resultados
-                .map((resultado) => (
+              {
+                resultadoInterpolacion
+                  .resultados
+                  .map(
+                    (resultado) => (
 
-                  <div
-                    className="scientific-card"
-                    key={resultado.x}
-                  >
-                    <span>
-                      X = {resultado.x}
-                    </span>
+                      <div
+                        className="scientific-card"
+                        key={resultado.x}
+                      >
 
-                    <strong>
-                      {resultado
-                        .valor_estimado
-                        .toFixed(2)}
-                    </strong>
-                  </div>
+                        <span>
+                          X = {resultado.x}
+                        </span>
 
-                ))}
+
+                        <strong>
+
+                          {
+                            resultado
+                              .valor_estimado
+                              .toFixed(2)
+                          }
+
+                        </strong>
+
+                      </div>
+
+                    )
+                  )
+              }
 
             </div>
 
           </div>
+
         )}
 
       </section>
@@ -616,52 +913,73 @@ function Metricas() {
       {/* OPTIMIZACIÓN */}
       {/* ===================================== */}
 
-      <section className="dashboard-panel">
+      <section
+        id="optimizacion"
+        className="dashboard-panel"
+      >
 
         <div className="panel-header">
+
           <div>
-            <h2>Optimización</h2>
+
+            <h2>
+              Optimización
+            </h2>
 
             <p>
               Minimización de costos bajo una
               restricción de capacidad
             </p>
+
           </div>
+
 
           <span className="panel-badge">
             minimize
           </span>
+
         </div>
 
 
         <form
           className="client-form"
-          onSubmit={ejecutarOptimizacion}
+          onSubmit={
+            ejecutarOptimizacion
+          }
         >
+
 
           <div className="form-grid">
 
+
             <div className="form-group">
+
               <label>
                 Nombre
               </label>
 
+
               <input
                 type="text"
-                value={nombreOptimizacion}
+                value={
+                  nombreOptimizacion
+                }
                 onChange={(evento) =>
                   setNombreOptimizacion(
                     evento.target.value
                   )
                 }
               />
+
             </div>
 
 
             <div className="form-group">
+
               <label>
                 Descripción
               </label>
+
 
               <input
                 type="text"
@@ -674,13 +992,16 @@ function Metricas() {
                   )
                 }
               />
+
             </div>
 
 
             <div className="form-group">
+
               <label>
                 Recurso A inicial
               </label>
+
 
               <input
                 type="number"
@@ -693,13 +1014,16 @@ function Metricas() {
                   )
                 }
               />
+
             </div>
 
 
             <div className="form-group">
+
               <label>
                 Recurso B inicial
               </label>
+
 
               <input
                 type="number"
@@ -712,13 +1036,16 @@ function Metricas() {
                   )
                 }
               />
+
             </div>
 
 
             <div className="form-group">
+
               <label>
                 Capacidad mínima
               </label>
+
 
               <input
                 type="number"
@@ -731,20 +1058,29 @@ function Metricas() {
                   )
                 }
               />
+
             </div>
+
 
           </div>
 
 
           <div className="form-actions">
+
             <button
               type="submit"
               className="primary-button"
               disabled={procesando}
             >
-              Ejecutar optimización
+
+              {procesando
+                ? "Procesando..."
+                : "Ejecutar optimización"}
+
             </button>
+
           </div>
+
 
         </form>
 
@@ -758,76 +1094,112 @@ function Metricas() {
               Resultado de optimización
             </h3>
 
+
             <div className="scientific-grid">
 
+
               <div className="scientific-card">
+
                 <span>
                   Recurso A óptimo
                 </span>
 
                 <strong>
-                  {resultadoOptimizacion
-                    .resultado
-                    .recurso_a
-                    .toFixed(2)}
+
+                  {
+                    resultadoOptimizacion
+                      .resultado
+                      .recurso_a
+                      .toFixed(2)
+                  }
+
                 </strong>
+
               </div>
 
 
               <div className="scientific-card">
+
                 <span>
                   Recurso B óptimo
                 </span>
 
                 <strong>
-                  {resultadoOptimizacion
-                    .resultado
-                    .recurso_b
-                    .toFixed(2)}
+
+                  {
+                    resultadoOptimizacion
+                      .resultado
+                      .recurso_b
+                      .toFixed(2)
+                  }
+
                 </strong>
+
               </div>
 
 
               <div className="scientific-card">
+
                 <span>
                   Costo inicial
                 </span>
 
                 <strong>
-                  {resultadoOptimizacion
-                    .costo_inicial
-                    ?.toFixed(2)}
+
+                  {
+                    resultadoOptimizacion
+                      .costo_inicial
+                      ?.toFixed(2)
+                  }
+
                 </strong>
+
               </div>
 
 
               <div className="scientific-card">
+
                 <span>
                   Costo optimizado
                 </span>
 
                 <strong>
-                  {resultadoOptimizacion
-                    .costo_optimizado
-                    ?.toFixed(2)}
+
+                  {
+                    resultadoOptimizacion
+                      .costo_optimizado
+                      ?.toFixed(2)
+                  }
+
                 </strong>
+
               </div>
 
 
               <div className="scientific-card">
-                <span>Ahorro</span>
+
+                <span>
+                  Ahorro
+                </span>
 
                 <strong>
-                  {resultadoOptimizacion
-                    .resultado
-                    .ahorro
-                    .toFixed(2)}
+
+                  {
+                    resultadoOptimizacion
+                      .resultado
+                      .ahorro
+                      .toFixed(2)
+                  }
+
                 </strong>
+
               </div>
+
 
             </div>
 
           </div>
+
         )}
 
       </section>

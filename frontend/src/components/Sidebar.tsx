@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 
 import {
   LayoutDashboard,
@@ -142,20 +142,20 @@ function Sidebar() {
           {grupoAbierto === "clientes" && (
             <div className="sidebar-submenu">
 
-              <span>
+              <Link to="/clientes#lista-clientes">
                 <List size={13} />
                 Lista de clientes
-              </span>
+              </Link>
 
-              <span>
+              <Link to="/clientes?accion=nuevo">
                 <UserPlus size={13} />
                 Nuevo cliente
-              </span>
+              </Link>
 
-              <span>
+              <Link to="/clientes#historial">
                 <History size={13} />
                 Historial
-              </span>
+              </Link>
 
             </div>
           )}
@@ -209,20 +209,20 @@ function Sidebar() {
           {grupoAbierto === "atencion" && (
             <div className="sidebar-submenu">
 
-              <span>
+              <Link to="/atencion#solicitudes">
                 <Inbox size={13} />
-                Solicitudes
-              </span>
+                Registrar solicitud
+              </Link>
 
-              <span>
+               <Link to="/atencion#comentarios">
                 <MessageSquare size={13} />
                 Comentarios
-              </span>
+              </Link>
 
-              <span>
+              <Link to="/atencion#tiempos">
                 <Clock3 size={13} />
                 Tiempos de atención
-              </span>
+              </Link>
 
             </div>
           )}
@@ -285,25 +285,25 @@ function Sidebar() {
           {grupoAbierto === "nlp" && (
             <div className="sidebar-submenu">
 
-              <span>
+              <Link to="/nlp#analizar">
                 <ScanSearch size={13} />
                 Analizar comentario
-              </span>
+              </Link>
 
-              <span>
+              <Link to="/nlp#palabras">
                 <BarChart3 size={13} />
                 Palabras frecuentes
-              </span>
+              </Link>
 
-              <span>
+              <Link to="/nlp#categorias">
                 <Tags size={13} />
                 Categorías
-              </span>
+              </Link>
 
-              <span>
+              <Link to="/nlp#clasificacion">
                 <BrainCircuit size={13} />
                 Clasificación
-              </span>
+              </Link>
 
             </div>
           )}
@@ -366,20 +366,20 @@ function Sidebar() {
           {grupoAbierto === "metricas" && (
             <div className="sidebar-submenu">
 
-              <span>
+              <Link to="/metricas#estadisticas">
                 <Activity size={13} />
                 Estadísticas
-              </span>
+              </Link>
 
-              <span>
+              <Link to="/metricas#interpolacion">
                 <TrendingUp size={13} />
                 Interpolación
-              </span>
+              </Link>
 
-              <span>
+              <Link to="/metricas#optimizacion">
                 <SlidersHorizontal size={13} />
                 Optimización
-              </span>
+              </Link>
 
             </div>
           )}
@@ -442,20 +442,20 @@ function Sidebar() {
           {grupoAbierto === "reportes" && (
             <div className="sidebar-submenu">
 
-              <span>
+              <Link to="/reportes#reporte-atencion">
                 <Clock3 size={13} />
                 Atención
-              </span>
+              </Link>
 
-              <span>
+              <Link to="/reportes#reporte-nlp">
                 <BrainCircuit size={13} />
                 NLP
-              </span>
+              </Link>
 
-              <span>
+              <Link to="/reportes#reporte-estadisticas">
                 <BarChart3 size={13} />
                 Estadísticas
-              </span>
+              </Link>
 
             </div>
           )}

@@ -1,4 +1,10 @@
 import { useEffect, useState } from "react";
+
+import {
+  useLocation,
+  useSearchParams,
+} from "react-router-dom";
+
 import Loading from "../components/Loading";
 
 import {
@@ -21,7 +27,23 @@ const formularioInicial: ClienteCreate = {
 
 
 function Clientes() {
-  const [clientes, setClientes] = useState<Cliente[]>([]);
+
+  // ============================================
+  // NAVEGACIÓN
+  // ============================================
+
+  const location = useLocation();
+
+  const [searchParams, setSearchParams] =
+    useSearchParams();
+
+
+  // ============================================
+  // ESTADOS
+  // ============================================
+
+  const [clientes, setClientes] =
+    useState<Cliente[]>([]);
 
   const [formulario, setFormulario] =
     useState<ClienteCreate>(formularioInicial);
@@ -56,6 +78,7 @@ function Clientes() {
       setError(null);
 
     } catch (error) {
+
       console.error(
         "Error al cargar clientes:",
         error
@@ -77,14 +100,61 @@ function Clientes() {
 
 
   // ============================================
+  // ATAJO NUEVO CLIENTE
+  // ============================================
+
+  useEffect(() => {
+    const accion = searchParams.get("accion");
+
+    if (accion === "nuevo") {
+      abrirNuevoCliente();
+
+      setSearchParams(
+        {},
+        { replace: true }
+      );
+    }
+  }, [searchParams, setSearchParams]);
+
+
+  // ============================================
+  // SCROLL A UNA SECCIÓN
+  // ============================================
+
+  useEffect(() => {
+    if (!location.hash || cargando) {
+      return;
+    }
+
+    const id =
+      location.hash.replace("#", "");
+
+    const elemento =
+      document.getElementById(id);
+
+    if (elemento) {
+      elemento.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+
+  }, [location.hash, cargando]);
+
+
+  // ============================================
   // CAMBIAR CAMPOS DEL FORMULARIO
   // ============================================
 
   function manejarCambio(
     evento: React.ChangeEvent<HTMLInputElement>
   ) {
-    const { name, value, type, checked } =
-      evento.target;
+    const {
+      name,
+      value,
+      type,
+      checked,
+    } = evento.target;
 
     setFormulario((anterior) => ({
       ...anterior,
@@ -103,8 +173,11 @@ function Clientes() {
 
   function abrirNuevoCliente() {
     setFormulario(formularioInicial);
+
     setClienteEditando(null);
+
     setMostrarFormulario(true);
+
     setError(null);
   }
 
@@ -123,7 +196,9 @@ function Clientes() {
     });
 
     setClienteEditando(cliente.id);
+
     setMostrarFormulario(true);
+
     setError(null);
   }
 
@@ -134,8 +209,11 @@ function Clientes() {
 
   function cancelarFormulario() {
     setFormulario(formularioInicial);
+
     setClienteEditando(null);
+
     setMostrarFormulario(false);
+
     setError(null);
   }
 
@@ -153,6 +231,7 @@ function Clientes() {
       setError(
         "El nombre del cliente es obligatorio"
       );
+
       return;
     }
 
@@ -171,26 +250,38 @@ function Clientes() {
       activo: formulario.activo,
     };
 
+
     try {
       setGuardando(true);
       setError(null);
 
+
       if (clienteEditando !== null) {
+
         await actualizarCliente(
           clienteEditando,
           datos
         );
+
       } else {
+
         await crearCliente(datos);
+
       }
+
 
       await cargarClientes();
 
+
       setFormulario(formularioInicial);
+
       setClienteEditando(null);
+
       setMostrarFormulario(false);
 
+
     } catch (error) {
+
       console.error(
         "Error al guardar cliente:",
         error
@@ -201,7 +292,9 @@ function Clientes() {
       );
 
     } finally {
+
       setGuardando(false);
+
     }
   }
 
@@ -221,6 +314,7 @@ function Clientes() {
       return;
     }
 
+
     try {
       setError(null);
 
@@ -228,11 +322,13 @@ function Clientes() {
 
       setClientes((anteriores) =>
         anteriores.filter(
-          (item) => item.id !== cliente.id
+          (item) =>
+            item.id !== cliente.id
         )
       );
 
     } catch (error) {
+
       console.error(
         "Error al eliminar cliente:",
         error
@@ -253,6 +349,7 @@ function Clientes() {
     <main className="dashboard-page">
 
       <header className="dashboard-header">
+
         <div>
           <h1>Clientes</h1>
 
@@ -262,6 +359,7 @@ function Clientes() {
           </p>
         </div>
 
+
         <button
           type="button"
           className="primary-button"
@@ -269,12 +367,11 @@ function Clientes() {
         >
           + Nuevo cliente
         </button>
+
       </header>
 
 
-      {/* ===================================== */}
-      {/* MENSAJES */}
-      {/* ===================================== */}
+      {/* ERROR */}
 
       {error && (
         <div className="message-error">
@@ -288,10 +385,16 @@ function Clientes() {
       {/* ===================================== */}
 
       {mostrarFormulario && (
-        <section className="dashboard-panel">
+
+        <section
+          id="nuevo-cliente"
+          className="dashboard-panel"
+        >
 
           <div className="panel-header">
+
             <div>
+
               <h2>
                 {clienteEditando !== null
                   ? "Editar cliente"
@@ -301,7 +404,9 @@ function Clientes() {
               <p>
                 Completa los datos del cliente
               </p>
+
             </div>
+
           </div>
 
 
@@ -313,6 +418,7 @@ function Clientes() {
             <div className="form-grid">
 
               <div className="form-group">
+
                 <label htmlFor="nombre">
                   Nombre *
                 </label>
@@ -325,10 +431,12 @@ function Clientes() {
                   onChange={manejarCambio}
                   required
                 />
+
               </div>
 
 
               <div className="form-group">
+
                 <label htmlFor="email">
                   Email
                 </label>
@@ -337,13 +445,17 @@ function Clientes() {
                   id="email"
                   name="email"
                   type="email"
-                  value={formulario.email ?? ""}
+                  value={
+                    formulario.email ?? ""
+                  }
                   onChange={manejarCambio}
                 />
+
               </div>
 
 
               <div className="form-group">
+
                 <label htmlFor="telefono">
                   Teléfono
                 </label>
@@ -357,10 +469,12 @@ function Clientes() {
                   }
                   onChange={manejarCambio}
                 />
+
               </div>
 
 
               <div className="form-group">
+
                 <label htmlFor="empresa">
                   Empresa
                 </label>
@@ -374,12 +488,14 @@ function Clientes() {
                   }
                   onChange={manejarCambio}
                 />
+
               </div>
 
             </div>
 
 
             <label className="checkbox-group">
+
               <input
                 name="activo"
                 type="checkbox"
@@ -390,6 +506,7 @@ function Clientes() {
               />
 
               Cliente activo
+
             </label>
 
 
@@ -403,16 +520,19 @@ function Clientes() {
                 Cancelar
               </button>
 
+
               <button
                 type="submit"
                 className="primary-button"
                 disabled={guardando}
               >
+
                 {guardando
                   ? "Guardando..."
                   : clienteEditando !== null
                     ? "Guardar cambios"
                     : "Crear cliente"}
+
               </button>
 
             </div>
@@ -427,36 +547,55 @@ function Clientes() {
       {/* TABLA */}
       {/* ===================================== */}
 
-      <section className="dashboard-panel">
+      <section
+        id="lista-clientes"
+        className="dashboard-panel"
+      >
 
         <div className="panel-header">
+
           <div>
-            <h2>Lista de clientes</h2>
+
+            <h2>
+              Lista de clientes
+            </h2>
 
             <p>
               {clientes.length} cliente
-              {clientes.length !== 1 ? "s" : ""}
+              {clientes.length !== 1
+                ? "s"
+                : ""}
               {" "}registrado
-              {clientes.length !== 1 ? "s" : ""}
+              {clientes.length !== 1
+                ? "s"
+                : ""}
             </p>
+
           </div>
+
         </div>
 
 
         {cargando ? (
-          <Loading texto="Cargando clientes..." />
+
+          <Loading
+            texto="Cargando clientes..."
+          />
 
         ) : clientes.length === 0 ? (
+
           <p>
             No existen clientes registrados.
           </p>
 
         ) : (
+
           <div className="table-container">
 
             <table className="data-table">
 
               <thead>
+
                 <tr>
                   <th>ID</th>
                   <th>Nombre</th>
@@ -466,6 +605,7 @@ function Clientes() {
                   <th>Estado</th>
                   <th>Acciones</th>
                 </tr>
+
               </thead>
 
 
@@ -498,6 +638,7 @@ function Clientes() {
                     </td>
 
                     <td>
+
                       <span
                         className={
                           cliente.activo
@@ -509,9 +650,11 @@ function Clientes() {
                           ? "Activo"
                           : "Inactivo"}
                       </span>
+
                     </td>
 
                     <td>
+
                       <div className="table-actions">
 
                         <button
@@ -523,6 +666,7 @@ function Clientes() {
                         >
                           Editar
                         </button>
+
 
                         <button
                           type="button"
@@ -537,6 +681,7 @@ function Clientes() {
                         </button>
 
                       </div>
+
                     </td>
 
                   </tr>
