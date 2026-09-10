@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
 
 import {
   LayoutDashboard,
@@ -22,6 +22,8 @@ import {
   ScanSearch,
   ChevronDown,
   ChevronRight,
+  UserCircle,
+  LogOut,
 } from "lucide-react";
 
 
@@ -38,6 +40,15 @@ function Sidebar() {
     );
   }
 
+  const navigate = useNavigate();
+
+  function cerrarSesion() {
+    sessionStorage.removeItem("isAuthenticated");
+
+    navigate("/login", {
+      replace: true,
+    });
+  }
 
   return (
     <aside className="sidebar">
@@ -509,27 +520,41 @@ function Sidebar() {
           </div>
 
 
-          {grupoAbierto ===
-            "configuracion" && (
+          {grupoAbierto === "configuracion" && (
 
             <div className="sidebar-submenu">
 
-              <span>
+              <Link to="/configuracion#perfil">
+                <UserCircle size={13} />
+                Perfil
+              </Link>
+
+              <Link to="/configuracion#usuarios">
                 <Users size={13} />
                 Usuarios
-              </span>
+              </Link>
 
-              <span>
+              <Link to="/configuracion#categorias-config">
                 <Tags size={13} />
                 Categorías
-              </span>
+              </Link>
 
-              <span>
+              <Link to="/configuracion#auditoria">
                 <History size={13} />
                 Auditoría
-              </span>
+              </Link>
+
+              <button
+                type="button"
+                className="sidebar-submenu-button logout-link"
+                onClick={cerrarSesion}
+              >
+                <LogOut size={13} />
+                Cerrar sesión
+              </button>
 
             </div>
+
           )}
 
         </div>
