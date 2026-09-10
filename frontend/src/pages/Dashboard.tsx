@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Loading from "../components/Loading";
 
 import {
   obtenerDashboard,
@@ -94,19 +95,12 @@ function Dashboard() {
   // ============================================
 
   if (cargando) {
-    return (
-      <main className="dashboard-page">
-        <header className="dashboard-header">
-          <div>
-            <h1>Centro Inteligente</h1>
-            <p>
-              Cargando información del sistema...
-            </p>
-          </div>
-        </header>
-      </main>
-    );
-  }
+  return (
+    <main className="dashboard-page">
+      <Loading texto="Cargando dashboard..." />
+    </main>
+  );
+}
 
 
   if (error || !dashboard) {

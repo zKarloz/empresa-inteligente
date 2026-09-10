@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Loading from "../components/Loading";
 
 import {
   obtenerClientes,
@@ -443,7 +444,7 @@ function Clientes() {
 
 
         {cargando ? (
-          <p>Cargando clientes...</p>
+          <Loading texto="Cargando clientes..." />
 
         ) : clientes.length === 0 ? (
           <p>

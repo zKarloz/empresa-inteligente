@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Loading from "../components/Loading";
 
 import {
   obtenerEstadisticas,
@@ -362,10 +363,8 @@ function Metricas() {
 
 
         {cargando ? (
-          <p>
-            Calculando estadísticas...
-          </p>
-
+          <Loading texto="Calculando estadísticas..." />
+          
         ) : estadisticas ? (
 
           <div className="scientific-grid">

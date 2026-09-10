@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Loading from "../components/Loading";
 
 import {
   obtenerDashboard,
@@ -92,9 +93,7 @@ function Reportes() {
       <main className="dashboard-page">
         <h1>Reportes</h1>
 
-        <p>
-          Cargando información...
-        </p>
+        <Loading texto="Generando reportes..." />
       </main>
     );
   }

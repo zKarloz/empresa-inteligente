@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Loading from "../components/Loading";
 
 import {
   obtenerClientes,
@@ -644,7 +645,7 @@ function Atencion() {
 
 
         {cargando ? (
-          <p>Cargando...</p>
+          <Loading texto="Cargando datos de atención..." />
 
         ) : comentarios.length === 0 ? (
           <p>
