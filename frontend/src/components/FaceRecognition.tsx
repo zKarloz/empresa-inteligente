@@ -107,12 +107,7 @@ function FaceRecognition({
     useState<string | null>(
       null
     );
-
-    const [camaras, setCamaras] =
-    useState<MediaDeviceInfo[]>([]);
-
-    const [camaraSeleccionada, setCamaraSeleccionada] =
-    useState("");
+    
 
   // =======================================================
   // INICIAR SISTEMA
