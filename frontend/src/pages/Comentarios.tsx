@@ -1,103 +1,99 @@
-import { useEffect, useState } from 'react';
-import { PageHeader } from '../components/PageHeader';
-import { EmptyState } from '../components/EmptyState';
-import { MessageSquare, RefreshCw, Search, User } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 
 interface Comentario {
   id: number;
-  cliente: string;
+  usuario: string;
   texto: string;
   fecha: string;
 }
 
 export function Comentarios() {
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('');
-
-  const fetchComentarios = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('http://localhost:5000/api/comentarios');
-      if (res.ok) {
-        const data = await res.json();
-        setComentarios(data);
-      }
-    } catch (err) {
-      console.error('Error al cargar comentarios:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [nuevoTexto, setNuevoTexto] = useState('');
+  const [usuarioNombre, setUsuarioNombre] = useState('');
 
   useEffect(() => {
-    fetchComentarios();
+    const dataGuardada = localStorage.getItem('app_comentarios');
+    if (dataGuardada) {
+      setComentarios(JSON.parse(dataGuardada));
+    } else {
+      const iniciales = [
+        { id: 1, usuario: 'Carlos R.', texto: 'Excelente servicio y atención en plataforma.', fecha: '2026-09-08' },
+        { id: 2, usuario: 'Ana M.', texto: 'La respuesta del sistema fue rápida y clara.', fecha: '2026-09-09' },
+        { id: 3, usuario: 'Luis M.', texto: 'Los algoritmos de optimización mejoraron mucho nuestro rendimiento.', fecha: '2026-09-09' },
+        { id: 4, usuario: 'Sofía T.', texto: 'El módulo de análisis NLP es bastante preciso.', fecha: '2026-09-10' },
+        { id: 5, usuario: 'Diego F.', texto: 'Buena integración con la base de datos y la interfaz gráfica.', fecha: '2026-09-10' }
+      ];
+      setComentarios(iniciales);
+      localStorage.setItem('app_comentarios', JSON.stringify(iniciales));
+    }
   }, []);
 
-  const filtered = comentarios.filter(c =>
-    c.cliente.toLowerCase().includes(filter.toLowerCase()) ||
-    c.texto.toLowerCase().includes(filter.toLowerCase())
-  );
+  const agregarComentario = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nuevoTexto.trim() || !usuarioNombre.trim()) return;
+
+    const nuevo = {
+      id: comentarios.length + 1,
+      usuario: usuarioNombre,
+      texto: nuevoTexto,
+      fecha: new Date().toISOString().split('T')[0]
+    };
+
+    const listaActualizada = [nuevo, ...comentarios];
+    setComentarios(listaActualizada);
+    localStorage.setItem('app_comentarios', JSON.stringify(listaActualizada));
+
+    setNuevoTexto('');
+    setUsuarioNombre('');
+  };
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Comentarios del Cliente"
-        subtitle="Listado de feedback y opiniones recopiladas para análisis de texto"
-      />
-
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-          <input
-            type="text"
-            placeholder="Buscar en comentarios..."
-            value={filter}
-            onChange={e => setFilter(e.target.value)}
-            className="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all"
-          />
+    <div className="content-panel">
+      <div className="panel-title">
+        <div>
+          <h2>Comentarios de Usuarios</h2>
+          <p>Listado de retroalimentación recibida en tiempo real</p>
         </div>
-        <button
-          onClick={fetchComentarios}
-          className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition-colors"
-        >
-          <RefreshCw className="w-4 h-4" />
-        </button>
       </div>
 
-      {loading ? (
-        <div className="flex flex-col items-center justify-center h-48 space-y-2">
-          <RefreshCw className="w-6 h-6 text-indigo-600 animate-spin" />
-          <p className="text-xs font-semibold text-slate-400">Cargando comentarios...</p>
+      <form onSubmit={agregarComentario} style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+          <input
+            type="text"
+            placeholder="Tu nombre / cliente..."
+            value={usuarioNombre}
+            onChange={(e) => setUsuarioNombre(e.target.value)}
+            style={{ padding: '8px', flex: 1, borderRadius: '4px', border: '1px solid #d1d5db' }}
+            required
+          />
         </div>
-      ) : filtered.length === 0 ? (
-        <EmptyState
-          title="Sin comentarios encontrados"
-          description="No existen opiniones registradas con ese término de búsqueda."
-        />
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filtered.map(item => (
-            <div key={item.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 bg-slate-100 rounded-lg text-slate-600">
-                    <User className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="text-xs font-bold text-slate-800">{item.cliente}</span>
-                </div>
-                <span className="text-[10px] text-slate-400 font-medium">{item.fecha}</span>
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed italic bg-slate-50 p-3 rounded-xl border border-slate-100">
-                "{item.texto}"
-              </p>
-              <div className="flex items-center gap-1 text-[10px] font-extrabold text-indigo-600">
-                <MessageSquare className="w-3 h-3" /> Registrado para NLTK
-              </div>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <input
+            type="text"
+            placeholder="Escribe tu opinión en tiempo real..."
+            value={nuevoTexto}
+            onChange={(e) => setNuevoTexto(e.target.value)}
+            style={{ padding: '8px', flex: 3, borderRadius: '4px', border: '1px solid #d1d5db' }}
+            required
+          />
+          <button type="submit" className="primary-button">Publicar Opinión</button>
+        </div>
+      </form>
+
+      <div className="simple-list">
+        {comentarios.map((c) => (
+          <div key={c.id} className="simple-list-item" style={{ padding: '12px 0', borderBottom: '1px solid #e5e7eb' }}>
+            <div>
+              <strong>{c.usuario}</strong>
+              <p style={{ margin: '4px 0', fontSize: '14px', color: '#374151' }}>{c.texto}</p>
+              <span style={{ fontSize: '12px', color: '#9ca3af' }}>{c.fecha}</span>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
+
+export default Comentarios;

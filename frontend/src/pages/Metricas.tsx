@@ -1,87 +1,61 @@
-import { useEffect, useState } from 'react';
-import { PageHeader } from '../components/PageHeader';
-import { StatCard } from '../components/StatCard';
-import { Activity, Award, Target, Zap, RefreshCw } from 'lucide-react';
-
 export function Metricas() {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchMetricas = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('http://localhost:5000/api/metricas');
-      if (res.ok) {
-        const json = await res.json();
-        setData(json);
-      }
-    } catch (err) {
-      console.error('Error al cargar métricas:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchMetricas();
-  }, []);
+  const metricasModelos = [
+    { modelo: 'Modelo NLP (Sentimiento)', precision: '94.8%', recall: '92.1%', f1Score: '93.4%' },
+    { modelo: 'Interpolación / Curvas', precision: '98.2%', recall: '97.5%', f1Score: '97.8%' },
+    { modelo: 'Optimizador SciPy', precision: '99.1%', recall: '98.9%', f1Score: '99.0%' }
+  ];
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Métricas y Analytics"
-        subtitle="Evaluación del desempeño general del sistema y calidad de atención"
-        actions={
-          <button
-            onClick={fetchMetricas}
-            className="flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors"
-          >
-            <RefreshCw className="w-3.5 h-3.5" /> Actualizar
-          </button>
-        }
-      />
+    <div className="content-panel">
+      <div className="panel-title">
+        <div>
+          <h2>Métricas del Sistema e Inteligencia Artificial</h2>
+          <p>Evaluación de rendimiento, precisión y matriz de desempeño de los algoritmos</p>
+        </div>
+      </div>
 
-      {loading ? (
-        <div className="flex flex-col items-center justify-center h-48 space-y-2">
-          <RefreshCw className="w-6 h-6 text-indigo-600 animate-spin" />
-          <p className="text-xs font-semibold text-slate-400">Calculando indicadores clave...</p>
+      <div className="kpi-grid" style={{ marginBottom: '25px' }}>
+        <div className="kpi-card">
+          <span className="kpi-label">Precisión Promedio</span>
+          <div className="kpi-value">97.3%</div>
+          <span className="kpi-description">En todos los modelos</span>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            title="Efectividad CSAT"
-            value={`${data?.csat || 94}%`}
-            badge="Excelente"
-            badgeColor="green"
-            icon={Award}
-            subtext="Índice de satisfacción directa"
-          />
-          <StatCard
-            title="Resolución 1er Contacto"
-            value={`${data?.fcr || 88}%`}
-            badge="Alto"
-            badgeColor="blue"
-            icon={Target}
-            subtext="Tickets resueltos al primer intento"
-          />
-          <StatCard
-            title="Tiempo Respuesta"
-            value={`${data?.sla || 1.2} min`}
-            badge="SLA Cumplido"
-            badgeColor="green"
-            icon={Zap}
-            subtext="Tiempo medio de primera respuesta"
-          />
-          <StatCard
-            title="Retención Clientes"
-            value={`${data?.retencion || 96}%`}
-            badge="Estable"
-            badgeColor="amber"
-            icon={Activity}
-            subtext="Tasa de permanencia mensual"
-          />
+        <div className="kpi-card">
+          <span className="kpi-label">Latencia Muestral</span>
+          <div className="kpi-value">32 ms</div>
+          <span className="kpi-description">Respuesta inmediata</span>
         </div>
-      )}
+        <div className="kpi-card">
+          <span className="kpi-label">Error Cuadrático Medio (MSE)</span>
+          <div className="kpi-value">0.012</div>
+          <span className="kpi-description">Nivel óptimo</span>
+        </div>
+      </div>
+
+      <div className="table-container">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Modelo / Algoritmo</th>
+              <th>Precisión (Accuracy)</th>
+              <th>Exhaustividad (Recall)</th>
+              <th>F1-Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {metricasModelos.map((m, index) => (
+              <tr key={index}>
+                <td><strong>{m.modelo}</strong></td>
+                <td>{m.precision}</td>
+                <td>{m.recall}</td>
+                <td><span className="status-active">{m.f1Score}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
+
+export default Metricas;

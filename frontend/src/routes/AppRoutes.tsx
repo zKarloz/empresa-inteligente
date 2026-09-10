@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { DashboardLayout } from '../layouts/DashboardLayout';
-import { Dashboard } from '../pages/Dashboard';
+import Dashboard from '../pages/Dashboard';
 import { Clientes } from '../pages/Clientes';
 import { Atencion } from '../pages/Atencion';
 import { Comentarios } from '../pages/Comentarios';
@@ -16,12 +16,11 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<DashboardLayout />}>
-        {/* Funciona si entras a http://localhost:5173/ */}
+        {/* Ruta principal */}
         <Route index element={<Dashboard />} />
-        
-        {/* Funciona si entras a http://localhost:5173/dashboard */}
+
+        {/* Rutas individuales */}
         <Route path="dashboard" element={<Dashboard />} />
-        
         <Route path="clientes" element={<Clientes />} />
         <Route path="atencion" element={<Atencion />} />
         <Route path="comentarios" element={<Comentarios />} />
@@ -32,8 +31,8 @@ export function AppRoutes() {
         <Route path="optimizacion" element={<Optimizacion />} />
         <Route path="reportes" element={<Reportes />} />
         <Route path="configuracion" element={<Configuracion />} />
-        
-        {/* Si escriben cualquier otra ruta desconocida, redirige al inicio */}
+
+        {/* Redirección para rutas no encontradas */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
