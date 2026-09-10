@@ -2298,3 +2298,525 @@ body {
     padding: 15px;
   }
 }
+
+/* =========================================================
+   RECONOCIMIENTO FACIAL
+========================================================= */
+
+.face-recognition {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.25fr)
+    minmax(300px, 0.75fr);
+
+  gap: 24px;
+
+  width: 100%;
+}
+
+.face-camera-container {
+  position: relative;
+
+  min-height: 430px;
+
+  overflow: hidden;
+
+  border-radius: 14px;
+
+  background: #050816;
+
+  border: 1px solid #1e293b;
+}
+
+.face-video {
+  width: 100%;
+  height: 100%;
+
+  position: absolute;
+
+  inset: 0;
+
+  object-fit: cover;
+
+  transform: scaleX(-1);
+}
+
+.face-guide {
+  position: absolute;
+
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  pointer-events: none;
+}
+
+.face-guide-frame {
+  width: 230px;
+  height: 300px;
+
+  border: 2px solid
+    rgba(167, 139, 250, 0.8);
+
+  border-radius: 46%;
+
+  box-shadow:
+    0 0 0 999px
+    rgba(5, 8, 22, 0.18);
+}
+
+.face-status-indicator {
+  position: absolute;
+
+  left: 16px;
+  bottom: 16px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  padding: 8px 11px;
+
+  border-radius: 8px;
+
+  background:
+    rgba(15, 23, 42, 0.88);
+
+  color: #cbd5e1;
+
+  font-size: 11px;
+
+  backdrop-filter:
+    blur(10px);
+}
+
+.face-status-valid {
+  color: #6ee7b7;
+
+  border:
+    1px solid
+    rgba(16, 185, 129, 0.25);
+}
+
+.face-register-info {
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+
+  gap: 20px;
+}
+
+.face-step {
+  color: #7c3aed;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.08em;
+}
+
+.face-register-info h3 {
+  margin: 7px 0;
+
+  color: #1e293b;
+
+  font-size: 20px;
+}
+
+.face-register-info p {
+  margin: 0;
+
+  color: #64748b;
+
+  font-size: 12px;
+
+  line-height: 1.6;
+}
+
+
+/* PROGRESO */
+
+.face-progress {
+  display: flex;
+
+  gap: 9px;
+}
+
+.face-progress-step {
+  width: 31px;
+  height: 31px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #f1f5f9;
+
+  color: #94a3b8;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.face-progress-step.completed {
+  background: #ede9fe;
+
+  color: #7c3aed;
+}
+
+
+/* MÉTRICAS */
+
+.face-metrics {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, 1fr);
+
+  gap: 9px;
+}
+
+.face-metrics div {
+  padding: 11px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+
+  background: #f8fafc;
+}
+
+.face-metrics span {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #94a3b8;
+
+  font-size: 9px;
+
+  text-transform: uppercase;
+}
+
+.face-metrics strong {
+  color: #334155;
+
+  font-size: 13px;
+}
+
+
+/* BOTÓN */
+
+.face-capture-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  width: 100%;
+}
+
+.face-capture-button:disabled {
+  opacity: 0.45;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
+
+
+/* ÉXITO */
+
+.face-success {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  padding: 13px;
+
+  border:
+    1px solid #bbf7d0;
+
+  border-radius: 9px;
+
+  background: #f0fdf4;
+
+  color: #15803d;
+}
+
+.face-success div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.face-success strong {
+  font-size: 12px;
+}
+
+.face-success span {
+  font-size: 10px;
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 900px) {
+
+  .face-recognition {
+    grid-template-columns: 1fr;
+  }
+
+  .face-camera-container {
+    min-height: 380px;
+  }
+
+}
+
+@media (max-width: 520px) {
+
+  .face-camera-container {
+    min-height: 330px;
+  }
+
+  .face-metrics {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+/* =========================================================
+   LOGIN FACIAL
+========================================================= */
+
+.login-separator {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 22px 0;
+}
+
+.login-separator::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  background: rgba(255,255,255,.08);
+}
+
+.login-separator span {
+  position: relative;
+  padding: 0 10px;
+  background: #10182d;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.login-face-button {
+  width: 100%;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  border: 1px solid rgba(139,92,246,.35);
+  border-radius: 8px;
+
+  background: rgba(124,58,237,.08);
+
+  color: #c4b5fd;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.login-face-button:hover {
+  background: rgba(124,58,237,.15);
+}
+
+.login-face-area {
+  margin-top: 10px;
+}
+
+.face-login {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.face-login-selector {
+  display: flex;
+  gap: 8px;
+}
+
+.face-login-selector select {
+  min-width: 0;
+  flex: 1;
+
+  padding: 8px;
+
+  border: 1px solid #334155;
+  border-radius: 7px;
+
+  background: #060b18;
+  color: #cbd5e1;
+}
+
+.face-start-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 8px 10px;
+
+  border: none;
+  border-radius: 7px;
+
+  background: #312e81;
+  color: white;
+
+  cursor: pointer;
+}
+
+.face-login-camera {
+  position: relative;
+
+  height: 210px;
+
+  overflow: hidden;
+
+  border: 1px solid #334155;
+  border-radius: 10px;
+
+  background: #050816;
+}
+
+.face-login-camera video {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  transform: scaleX(-1);
+}
+
+.face-login-placeholder {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 9px;
+
+  color: #64748b;
+
+  font-size: 11px;
+}
+
+.face-login-frame {
+  position: absolute;
+
+  width: 125px;
+  height: 165px;
+
+  left: 50%;
+  top: 50%;
+
+  transform:
+    translate(-50%, -50%);
+
+  border: 2px solid #8b5cf6;
+
+  border-radius: 46%;
+
+  pointer-events: none;
+}
+
+.face-login-state {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  padding: 8px 10px;
+
+  border-radius: 7px;
+
+  background: rgba(15,23,42,.75);
+
+  color: #94a3b8;
+
+  font-size: 10px;
+}
+
+.face-login-state.valid {
+  color: #6ee7b7;
+
+  background:
+    rgba(16,185,129,.08);
+}
+
+.face-login-metrics {
+  display: grid;
+  grid-template-columns:
+    repeat(3, 1fr);
+
+  gap: 6px;
+}
+
+.face-login-metrics span {
+  padding: 7px;
+
+  border-radius: 6px;
+
+  background: rgba(255,255,255,.04);
+
+  color: #64748b;
+
+  text-align: center;
+
+  font-size: 9px;
+}
+
+.face-login-metrics strong {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #cbd5e1;
+
+  font-size: 11px;
+}
+
+.login-face-cancel {
+  width: 100%;
+
+  margin-top: 10px;
+
+  border: none;
+
+  background: transparent;
+
+  color: #7c8ba1;
+
+  font-size: 10px;
+
+  cursor: pointer;
+}

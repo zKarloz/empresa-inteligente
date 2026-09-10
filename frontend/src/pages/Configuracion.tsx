@@ -11,6 +11,12 @@ import {
   LogOut,
 } from "lucide-react";
 
+import FaceRecognition from
+  "../components/FaceRecognition";
+
+import {
+  registrarBiometria,
+} from "../services/biometria";
 
 function Configuracion() {
 
@@ -229,6 +235,67 @@ function Configuracion() {
 
       </section>
 
+      <section className="dashboard-panel">
+
+        <div className="panel-header">
+
+          <div>
+
+            <h2>
+              Registrar rostro
+            </h2>
+
+            <p>
+              Configuración biométrica del
+              administrador.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <FaceRecognition
+          onRegistroCompleto={async (
+            embeddings
+          ) => {
+
+            try {
+
+              const respuesta =
+                await registrarBiometria(
+                  "admin@empresa.com",
+                  embeddings
+                );
+
+
+              console.log(
+                respuesta
+              );
+
+
+              alert(
+                "Biometría facial guardada correctamente."
+              );
+
+            } catch (error) {
+
+              console.error(
+                "Error registrando biometría:",
+                error
+              );
+
+
+              alert(
+                "No se pudo guardar la biometría."
+              );
+
+            }
+
+          }}
+        />
+
+      </section>
 
       {/* ===================================== */}
       {/* USUARIOS */}

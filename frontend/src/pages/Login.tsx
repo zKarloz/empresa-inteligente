@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import FaceLogin from "../components/FaceLogin";
 
 import {
   Sparkles,
   Mail,
   LockKeyhole,
   ShieldCheck,
+  ScanFace,
 } from "lucide-react";
 
 
@@ -23,6 +25,9 @@ function Login() {
 
   const [cargando, setCargando] =
     useState(false);
+
+  const [loginFacial, setLoginFacial] =
+  useState(false);
 
 
   function iniciarSesion(
@@ -75,6 +80,18 @@ function Login() {
     }, 600);
   }
 
+  function accesoFacialCorrecto() {
+
+    sessionStorage.setItem(
+      "isAuthenticated",
+      "true"
+    );
+
+    navigate("/", {
+      replace: true,
+    });
+
+  }
 
   return (
     <main className="login-page">
@@ -265,6 +282,53 @@ function Login() {
 
           </form>
 
+          <div className="login-separator">
+            <span>o</span>
+          </div>
+
+
+          {!loginFacial ? (
+
+            <button
+              type="button"
+              className="login-face-button"
+              onClick={() =>
+                setLoginFacial(true)
+              }
+            >
+
+              <ScanFace size={17} />
+
+              Ingresar con reconocimiento facial
+
+            </button>
+
+          ) : (
+
+            <div className="login-face-area">
+
+              <FaceLogin
+                onSuccess={
+                  accesoFacialCorrecto
+                }
+              />
+
+
+              <button
+                type="button"
+                className="login-face-cancel"
+                onClick={() =>
+                  setLoginFacial(false)
+                }
+              >
+
+                Volver a contraseña
+
+              </button>
+
+            </div>
+
+          )}
 
           {/* CREDENCIALES DEMO */}
 
