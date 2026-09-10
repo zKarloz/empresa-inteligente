@@ -552,20 +552,13 @@ function FaceLogin({
       <button
         type="button"
         className="login-button"
-        disabled={
-          !analisis?.valido ||
-          verificando
-        }
-        onClick={
-          verificarIdentidad
-        }
-      >
-
+        disabled={!analisis?.valido || verificando}
+        onClick={verificarIdentidad}
+        >
         {verificando
-          ? "Verificando identidad..."
-          : "Verificar rostro"}
-
-      </button>
+            ? "Verificando identidad..."
+            : "Verificar rostro"}
+        </button>
 
 
       {error && (
