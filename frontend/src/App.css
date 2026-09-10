@@ -1436,3 +1436,11 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Alineación de datos en tablas */
+table td {
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

@@ -1,467 +1,170 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+import { PageHeader } from '../components/PageHeader';
+import { StatCard } from '../components/StatCard';
+import { EmptyState } from '../components/EmptyState';
+import { 
+  Users, Clock, MessageSquare, Brain, 
+  Activity, BarChart3, RefreshCw 
+} from 'lucide-react';
+import { 
+  BarChart, Bar, XAxis, YAxis, Tooltip, 
+  ResponsiveContainer, CartesianGrid, AreaChart, Area 
+} from 'recharts';
 
-import {
-  obtenerDashboard,
-  type DashboardData,
-} from "../services/dashboard";
+export function Dashboard() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-
-function Dashboard() {
-  const [dashboard, setDashboard] =
-    useState<DashboardData | null>(null);
-
-  const [cargando, setCargando] =
-    useState(true);
-
-  const [error, setError] =
-    useState<string | null>(null);
-
-
-  // ============================================
-  // CARGAR DATOS DEL BACKEND
-  // ============================================
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/dashboard');
+      if (res.ok) {
+        const json = await res.json();
+        setData(json);
+      }
+    } catch (err) {
+      console.error('Error cargando el dashboard:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function cargarDashboard() {
-      try {
-        setCargando(true);
-
-        const datos =
-          await obtenerDashboard();
-
-        setDashboard(datos);
-        setError(null);
-
-      } catch (error) {
-        console.error(
-          "Error al cargar el dashboard:",
-          error
-        );
-
-        setError(
-          "No se pudieron cargar los datos del dashboard"
-        );
-
-      } finally {
-        setCargando(false);
-      }
-    }
-
-    cargarDashboard();
+    fetchDashboardData();
   }, []);
 
-
-  // ============================================
-  // FORMATEAR FECHA
-  // Evita problemas de zona horaria con YYYY-MM-DD
-  // ============================================
-
-  function formatearFecha(
-    fecha: string
-  ) {
-    const partes = fecha.split("-");
-
-    if (partes.length !== 3) {
-      return fecha;
-    }
-
-    const [, mes, dia] = partes;
-
-    return `${dia}/${mes}`;
-  }
-
-
-  // ============================================
-  // FORMATEAR NOMBRE DE CATEGORÍA
-  // ============================================
-
-  function formatearCategoria(
-    categoria: string
-  ) {
-    const texto = categoria
-      .replaceAll("_", " ")
-      .toLowerCase();
-
+  if (loading) {
     return (
-      texto.charAt(0).toUpperCase()
-      + texto.slice(1)
+      <div className="flex flex-col items-center justify-center h-64 space-y-3">
+        <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin" />
+        <p className="text-xs font-bold text-slate-500">Cargando métricas del sistema...</p>
+      </div>
     );
   }
 
-
-  // ============================================
-  // ESTADOS DE CARGA
-  // ============================================
-
-  if (cargando) {
+  if (!data) {
     return (
-      <main className="dashboard-page">
-        <header className="dashboard-header">
-          <div>
-            <h1>Centro Inteligente</h1>
-            <p>
-              Cargando información del sistema...
-            </p>
-          </div>
-        </header>
-      </main>
+      <EmptyState 
+        title="Sin conexión al servidor" 
+        description="No se pudieron cargar las métricas en tiempo real. Asegúrate de que el backend esté en ejecución." 
+      />
     );
   }
-
-
-  if (error || !dashboard) {
-    return (
-      <main className="dashboard-page">
-        <header className="dashboard-header">
-          <div>
-            <h1>Centro Inteligente</h1>
-            <p>
-              {error ??
-                "No existen datos disponibles"}
-            </p>
-          </div>
-        </header>
-      </main>
-    );
-  }
-
-
-  // ============================================
-  // ESCALA DEL GRÁFICO
-  // ============================================
-
-  const maximoTiempo =
-    dashboard.tiempos_atencion.length > 0
-      ? Math.max(
-          ...dashboard.tiempos_atencion.map(
-            (item) => item.promedio
-          )
-        )
-      : 0;
-
 
   return (
-    <main className="dashboard-page">
+    <div className="space-y-6">
+      {/* Encabezado Principal */}
+      <PageHeader 
+        title="Panel General de Control" 
+        subtitle="Métricas globales en tiempo real del centro de atención al cliente"
+        actions={
+          <button 
+            onClick={fetchDashboardData}
+            className="flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors"
+          >
+            <RefreshCw className="w-3.5 h-3.5" /> Actualizar
+          </button>
+        }
+      />
 
-      {/* ======================================= */}
-      {/* ENCABEZADO */}
-      {/* ======================================= */}
+      {/* Fila de Tarjetas de Estadísticas principales */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard 
+          title="Total Clientes" 
+          value={data.total_clientes || 0} 
+          badge="+12%" 
+          badgeColor="green"
+          icon={Users}
+          subtext="Registrados en la base de datos"
+        />
+        <StatCard 
+          title="Atención Promedio" 
+          value={`${data.promedio_atencion || 0} min`} 
+          badge="Óptimo" 
+          badgeColor="blue"
+          icon={Clock}
+          subtext="Tiempo de resolución global"
+        />
+        <StatCard 
+          title="Comentarios" 
+          value={data.total_comentarios || 0} 
+          badge="100% NLTK" 
+          badgeColor="amber"
+          icon={MessageSquare}
+          subtext="Procesados para análisis NLP"
+        />
+        <StatCard 
+          title="Satisfacción" 
+          value={`${data.indice_satisfaccion || 0}%`} 
+          badge="Alto" 
+          badgeColor="green"
+          icon={Brain}
+          subtext="Basado en modelo sentimental"
+        />
+      </div>
 
-      <header className="dashboard-header">
-        <div>
-          <h1>Centro Inteligente</h1>
-
-          <p>
-            Resumen general de atención,
-            clientes y análisis NLP
-          </p>
-        </div>
-
-        <div className="dashboard-status">
-          Datos actualizados
-        </div>
-      </header>
-
-
-      {/* ======================================= */}
-      {/* KPIs */}
-      {/* ======================================= */}
-
-      <section className="kpi-grid">
-
-        <article className="kpi-card">
-          <span className="kpi-label">
-            Clientes
-          </span>
-
-          <strong className="kpi-value">
-            {dashboard.clientes}
-          </strong>
-
-          <span className="kpi-description">
-            Clientes registrados
-          </span>
-        </article>
-
-
-        <article className="kpi-card">
-          <span className="kpi-label">
-            Comentarios
-          </span>
-
-          <strong className="kpi-value">
-            {dashboard.comentarios}
-          </strong>
-
-          <span className="kpi-description">
-            Comentarios recibidos
-          </span>
-        </article>
-
-
-        <article className="kpi-card">
-          <span className="kpi-label">
-            Promedio
-          </span>
-
-          <strong className="kpi-value">
-            {dashboard.promedio_atencion}
-            {" "}
-            min
-          </strong>
-
-          <span className="kpi-description">
-            Tiempo promedio de atención
-          </span>
-        </article>
-
-
-        <article className="kpi-card">
-          <span className="kpi-label">
-            Procesados
-          </span>
-
-          <strong className="kpi-value">
-            {dashboard.porcentaje_procesados}
-            %
-          </strong>
-
-          <span className="kpi-description">
-            Comentarios analizados por NLP
-          </span>
-        </article>
-
-      </section>
-
-
-      {/* ======================================= */}
-      {/* PANELES PRINCIPALES */}
-      {/* ======================================= */}
-
-      <section className="dashboard-grid">
-
-        {/* ===================================== */}
-        {/* TIEMPOS DE ATENCIÓN */}
-        {/* ===================================== */}
-
-        <article className="dashboard-panel">
-
-          <div className="panel-header">
+      {/* Gráficos Principales de Recharts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Gráfico 1: Actividad Reciente */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h2>
-                Tiempos de atención
-              </h2>
-
-              <p>
-                Promedio diario en minutos
-              </p>
+              <h3 className="text-sm font-black text-slate-800">Frecuencia de Atenciones</h3>
+              <p className="text-[11px] text-slate-400 font-medium">Volumen de tickets por día</p>
             </div>
-
-            <span className="panel-badge">
-              Últimos registros
-            </span>
+            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+              <Activity className="w-4 h-4" />
+            </div>
           </div>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={data.grafico_atenciones || []}>
+                <defs>
+                  <linearGradient id="colorAtencion" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="dia" stroke="#94a3b8" fontSize={11} tickLine={false} />
+                <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', border: 'none', color: '#fff', fontSize: '12px' }}
+                  itemStyle={{ color: '#818cf8' }}
+                />
+                <Area type="monotone" dataKey="cantidad" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorAtencion)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
 
-
-          {dashboard.tiempos_atencion.length >
-          0 ? (
-            <div className="fake-chart">
-
-              <div className="chart-bars">
-
-                {dashboard.tiempos_atencion.map(
-                  (tiempo, index) => {
-
-                    const altura =
-                      maximoTiempo > 0
-                        ? Math.max(
-                            (
-                              tiempo.promedio
-                              / maximoTiempo
-                            ) * 100,
-                            8
-                          )
-                        : 8;
-
-                    return (
-                      <div
-                        key={tiempo.fecha}
-                        className={`chart-bar bar-${
-                          index + 1
-                        }`}
-                        style={{
-                          height: `${altura}%`,
-                        }}
-                        title={
-                          `${tiempo.promedio} min`
-                        }
-                      />
-                    );
-                  }
-                )}
-
-              </div>
-
-
-              <div className="chart-labels">
-
-                {dashboard.tiempos_atencion.map(
-                  (tiempo) => (
-                    <span
-                      key={tiempo.fecha}
-                    >
-                      {formatearFecha(
-                        tiempo.fecha
-                      )}
-                    </span>
-                  )
-                )}
-
-              </div>
-
-            </div>
-          ) : (
-            <p>
-              No existen tiempos de atención
-              registrados.
-            </p>
-          )}
-
-        </article>
-
-
-        {/* ===================================== */}
-        {/* CATEGORÍAS NLP */}
-        {/* ===================================== */}
-
-        <article className="dashboard-panel">
-
-          <div className="panel-header">
+        {/* Gráfico 2: Sentimiento del Cliente */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h2>
-                Categorías NLP
-              </h2>
-
-              <p>
-                Clasificación automática
-                de comentarios
-              </p>
+              <h3 className="text-sm font-black text-slate-800">Distribución de Sentimientos</h3>
+              <p className="text-[11px] text-slate-400 font-medium">Análisis de comentarios procesados</p>
             </div>
-
-            <span className="panel-badge">
-              NLTK
-            </span>
+            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+              <BarChart3 className="w-4 h-4" />
+            </div>
           </div>
-
-
-          <div className="category-list">
-
-            {dashboard.categorias_nlp.length >
-            0 ? (
-
-              dashboard.categorias_nlp.map(
-                (categoria) => (
-                  <div
-                    className="category-item"
-                    key={categoria.categoria}
-                  >
-
-                    <div className="category-info">
-                      <span>
-                        {formatearCategoria(
-                          categoria.categoria
-                        )}
-                      </span>
-
-                      <strong>
-                        {categoria.porcentaje}%
-                      </strong>
-                    </div>
-
-
-                    <div className="progress">
-                      <div
-                        className="progress-value"
-                        style={{
-                          width:
-                            `${categoria.porcentaje}%`,
-                        }}
-                      />
-                    </div>
-
-                  </div>
-                )
-              )
-
-            ) : (
-              <p>
-                Todavía no existen análisis
-                NLP clasificados.
-              </p>
-            )}
-
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data.distribucion_sentimientos || []}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="categoria" stroke="#94a3b8" fontSize={11} tickLine={false} />
+                <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', border: 'none', color: '#fff', fontSize: '12px' }}
+                />
+                <Bar dataKey="cantidad" fill="#10b981" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-
-        </article>
-
-      </section>
-
-
-      {/* ======================================= */}
-      {/* PALABRAS FRECUENTES */}
-      {/* ======================================= */}
-
-      <section className="dashboard-panel frequent-panel">
-
-        <div className="panel-header">
-          <div>
-            <h2>
-              Palabras más frecuentes
-            </h2>
-
-            <p>
-              Términos encontrados en los
-              comentarios procesados
-            </p>
-          </div>
-
-          <span className="panel-badge">
-            NLP
-          </span>
         </div>
-
-
-        <div className="word-list">
-
-          {dashboard.palabras_frecuentes.length >
-          0 ? (
-
-            dashboard.palabras_frecuentes.map(
-              (palabra) => (
-                <span
-                  key={palabra.palabra}
-                >
-                  {palabra.palabra}
-                  {" "}
-                  ({palabra.frecuencia})
-                </span>
-              )
-            )
-
-          ) : (
-            <p>
-              Todavía no existen palabras
-              analizadas.
-            </p>
-          )}
-
-        </div>
-
-      </section>
-
-    </main>
+      </div>
+    </div>
   );
 }
-
-
-export default Dashboard;

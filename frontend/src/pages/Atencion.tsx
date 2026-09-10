@@ -1,854 +1,126 @@
-import { useEffect, useState } from "react";
-
-import {
-  obtenerClientes,
-  type Cliente,
-} from "../services/clientes";
-
-import {
-  obtenerComentarios,
-  crearComentario,
-  eliminarComentario,
-  type Comentario,
-} from "../services/comentarios";
-
-import {
-  obtenerTiemposAtencion,
-  crearTiempoAtencion,
-  eliminarTiempoAtencion,
-  type TiempoAtencion,
-} from "../services/tiempoAtencion";
-
-
-function Atencion() {
-  const [clientes, setClientes] =
-    useState<Cliente[]>([]);
-
-  const [comentarios, setComentarios] =
-    useState<Comentario[]>([]);
-
-  const [tiempos, setTiempos] =
-    useState<TiempoAtencion[]>([]);
-
-  const [cargando, setCargando] =
-    useState(true);
-
-  const [error, setError] =
-    useState<string | null>(null);
-
-
-  // FORMULARIO COMENTARIO
-  const [clienteComentario, setClienteComentario] =
-    useState("");
-
-  const [contenido, setContenido] =
-    useState("");
-
-  const [canal, setCanal] =
-    useState("web");
-
-  const [categoria, setCategoria] =
-    useState("");
-
-
-  // FORMULARIO TIEMPO
-  const [clienteTiempo, setClienteTiempo] =
-    useState("");
-
-  const [comentarioTiempo, setComentarioTiempo] =
-    useState("");
-
-  const [minutos, setMinutos] =
-    useState("");
-
-  const [operador, setOperador] =
-    useState("");
-
-
-  // ============================================
-  // CARGAR DATOS
-  // ============================================
-
-  async function cargarDatos() {
-    try {
-      setCargando(true);
-
-      const [
-        datosClientes,
-        datosComentarios,
-        datosTiempos,
-      ] = await Promise.all([
-        obtenerClientes(),
-        obtenerComentarios(),
-        obtenerTiemposAtencion(),
-      ]);
-
-      setClientes(datosClientes);
-      setComentarios(datosComentarios);
-      setTiempos(datosTiempos);
-
-      setError(null);
-
-    } catch (error) {
-      console.error(error);
-
-      setError(
-        "No se pudieron cargar los datos de atención"
-      );
-
-    } finally {
-      setCargando(false);
-    }
-  }
-
-
-  useEffect(() => {
-    cargarDatos();
-  }, []);
-
-
-  // ============================================
-  // CREAR COMENTARIO
-  // ============================================
-
-  async function guardarComentario(
-    evento: React.FormEvent<HTMLFormElement>
-  ) {
-    evento.preventDefault();
-
-    if (!contenido.trim()) {
-      setError(
-        "El comentario no puede estar vacío"
-      );
-      return;
-    }
-
-    try {
-      await crearComentario({
-        cliente_id:
-          clienteComentario
-            ? Number(clienteComentario)
-            : null,
-
-        contenido: contenido.trim(),
-        canal,
-        estado: "pendiente",
-
-        categoria:
-          categoria || null,
-      });
-
-      setContenido("");
-      setClienteComentario("");
-      setCanal("web");
-      setCategoria("");
-
-      await cargarDatos();
-
-    } catch (error) {
-      console.error(error);
-
-      setError(
-        "No se pudo registrar el comentario"
-      );
-    }
-  }
-
-
-  // ============================================
-  // CREAR TIEMPO
-  // ============================================
-
-  async function guardarTiempo(
-    evento: React.FormEvent<HTMLFormElement>
-  ) {
-    evento.preventDefault();
-
-    const valorMinutos = Number(minutos);
-
-    if (
-      Number.isNaN(valorMinutos) ||
-      valorMinutos <= 0
-    ) {
-      setError(
-        "Ingresa un tiempo válido en minutos"
-      );
-      return;
-    }
-
-    try {
-      await crearTiempoAtencion({
-        cliente_id:
-          clienteTiempo
-            ? Number(clienteTiempo)
-            : null,
-
-        comentario_id:
-          comentarioTiempo
-            ? Number(comentarioTiempo)
-            : null,
-
-        tiempo_minutos:
-          valorMinutos,
-
-        operador:
-          operador.trim() || null,
-      });
-
-      setClienteTiempo("");
-      setComentarioTiempo("");
-      setMinutos("");
-      setOperador("");
-
-      await cargarDatos();
-
-    } catch (error) {
-      console.error(error);
-
-      setError(
-        "No se pudo registrar el tiempo de atención"
-      );
-    }
-  }
-
-
-  // ============================================
-  // ELIMINAR
-  // ============================================
-
-  async function borrarComentario(
-    comentario: Comentario
-  ) {
-    const confirmar = window.confirm(
-      `¿Eliminar el comentario #${comentario.id}?`
-    );
-
-    if (!confirmar) return;
-
-    try {
-      await eliminarComentario(
-        comentario.id
-      );
-
-      await cargarDatos();
-
-    } catch (error) {
-      console.error(error);
-
-      setError(
-        "No se pudo eliminar el comentario"
-      );
-    }
-  }
-
-
-  async function borrarTiempo(
-    tiempo: TiempoAtencion
-  ) {
-    const confirmar = window.confirm(
-      `¿Eliminar el registro de ${tiempo.tiempo_minutos} minutos?`
-    );
-
-    if (!confirmar) return;
-
-    try {
-      await eliminarTiempoAtencion(
-        tiempo.id
-      );
-
-      await cargarDatos();
-
-    } catch (error) {
-      console.error(error);
-
-      setError(
-        "No se pudo eliminar el tiempo"
-      );
-    }
-  }
-
-
-  // ============================================
-  // UTILIDAD
-  // ============================================
-
-  function nombreCliente(
-    clienteId: number | null
-  ) {
-    if (!clienteId) {
-      return "Sin cliente";
-    }
-
-    const cliente = clientes.find(
-      (item) => item.id === clienteId
-    );
-
-    return cliente?.nombre ??
-      `Cliente #${clienteId}`;
-  }
-
-
-  // ============================================
-  // INTERFAZ
-  // ============================================
-
-  return (
-    <main className="dashboard-page">
-
-      <header className="dashboard-header">
-        <div>
-          <h1>Atención</h1>
-
-          <p>
-            Gestión de comentarios y tiempos
-            de atención
-          </p>
-        </div>
-      </header>
-
-
-      {error && (
-        <div className="message-error">
-          {error}
-        </div>
-      )}
-
-
-      {/* ===================================== */}
-      {/* FORMULARIOS */}
-      {/* ===================================== */}
-
-      <section className="dashboard-grid">
-
-        {/* COMENTARIO */}
-
-        <article className="dashboard-panel">
-
-          <div className="panel-header">
-            <div>
-              <h2>
-                Nuevo comentario
-              </h2>
-
-              <p>
-                Registrar una solicitud o comentario
-              </p>
-            </div>
-          </div>
-
-
-          <form
-            className="client-form"
-            onSubmit={guardarComentario}
-          >
-
-            <div className="form-group">
-              <label>
-                Cliente
-              </label>
-
-              <select
-                value={clienteComentario}
-                onChange={(evento) =>
-                  setClienteComentario(
-                    evento.target.value
-                  )
-                }
-              >
-                <option value="">
-                  Sin cliente asociado
-                </option>
-
-                {clientes.map((cliente) => (
-                  <option
-                    key={cliente.id}
-                    value={cliente.id}
-                  >
-                    {cliente.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-
-            <div className="form-group">
-              <label>
-                Comentario *
-              </label>
-
-              <textarea
-                rows={5}
-                value={contenido}
-                onChange={(evento) =>
-                  setContenido(
-                    evento.target.value
-                  )
-                }
-                required
-              />
-            </div>
-
-
-            <div className="form-grid">
-
-              <div className="form-group">
-                <label>
-                  Canal
-                </label>
-
-                <select
-                  value={canal}
-                  onChange={(evento) =>
-                    setCanal(
-                      evento.target.value
-                    )
-                  }
-                >
-                  <option value="web">
-                    Web
-                  </option>
-
-                  <option value="email">
-                    Email
-                  </option>
-
-                  <option value="telefono">
-                    Teléfono
-                  </option>
-
-                  <option value="whatsapp">
-                    WhatsApp
-                  </option>
-                </select>
-              </div>
-
-
-              <div className="form-group">
-                <label>
-                  Categoría
-                </label>
-
-                <select
-                  value={categoria}
-                  onChange={(evento) =>
-                    setCategoria(
-                      evento.target.value
-                    )
-                  }
-                >
-                  <option value="">
-                    Sin categoría
-                  </option>
-
-                  <option value="VENTAS">
-                    Ventas
-                  </option>
-
-                  <option value="SOPORTE">
-                    Soporte
-                  </option>
-
-                  <option value="RECLAMO">
-                    Reclamo
-                  </option>
-
-                  <option value="CONSULTA">
-                    Consulta
-                  </option>
-
-                  <option value="FELICITACION">
-                    Felicitación
-                  </option>
-
-                  <option value="OTROS">
-                    Otros
-                  </option>
-                </select>
-              </div>
-
-            </div>
-
-
-            <div className="form-actions">
-              <button
-                type="submit"
-                className="primary-button"
-              >
-                Registrar comentario
-              </button>
-            </div>
-
-          </form>
-
-        </article>
-
-
-        {/* TIEMPO */}
-
-        <article className="dashboard-panel">
-
-          <div className="panel-header">
-            <div>
-              <h2>
-                Tiempo de atención
-              </h2>
-
-              <p>
-                Registrar duración de una atención
-              </p>
-            </div>
-          </div>
-
-
-          <form
-            className="client-form"
-            onSubmit={guardarTiempo}
-          >
-
-            <div className="form-group">
-              <label>
-                Cliente
-              </label>
-
-              <select
-                value={clienteTiempo}
-                onChange={(evento) =>
-                  setClienteTiempo(
-                    evento.target.value
-                  )
-                }
-              >
-                <option value="">
-                  Sin cliente asociado
-                </option>
-
-                {clientes.map((cliente) => (
-                  <option
-                    key={cliente.id}
-                    value={cliente.id}
-                  >
-                    {cliente.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-
-            <div className="form-group">
-              <label>
-                Comentario relacionado
-              </label>
-
-              <select
-                value={comentarioTiempo}
-                onChange={(evento) =>
-                  setComentarioTiempo(
-                    evento.target.value
-                  )
-                }
-              >
-                <option value="">
-                  Ninguno
-                </option>
-
-                {comentarios.map(
-                  (comentario) => (
-                    <option
-                      key={comentario.id}
-                      value={comentario.id}
-                    >
-                      #{comentario.id} -{" "}
-                      {comentario.contenido.slice(
-                        0,
-                        35
-                      )}
-                    </option>
-                  )
-                )}
-              </select>
-            </div>
-
-
-            <div className="form-grid">
-
-              <div className="form-group">
-                <label>
-                  Tiempo (minutos) *
-                </label>
-
-                <input
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  value={minutos}
-                  onChange={(evento) =>
-                    setMinutos(
-                      evento.target.value
-                    )
-                  }
-                  required
-                />
-              </div>
-
-
-              <div className="form-group">
-                <label>
-                  Operador
-                </label>
-
-                <input
-                  type="text"
-                  value={operador}
-                  onChange={(evento) =>
-                    setOperador(
-                      evento.target.value
-                    )
-                  }
-                />
-              </div>
-
-            </div>
-
-
-            <div className="form-actions">
-              <button
-                type="submit"
-                className="primary-button"
-              >
-                Registrar tiempo
-              </button>
-            </div>
-
-          </form>
-
-        </article>
-
-      </section>
-
-
-      {/* ===================================== */}
-      {/* COMENTARIOS */}
-      {/* ===================================== */}
-
-      <section className="dashboard-panel">
-
-        <div className="panel-header">
-          <div>
-            <h2>Comentarios</h2>
-
-            <p>
-              {comentarios.length} registros
-            </p>
-          </div>
-        </div>
-
-
-        {cargando ? (
-          <p>Cargando...</p>
-
-        ) : comentarios.length === 0 ? (
-          <p>
-            No existen comentarios.
-          </p>
-
-        ) : (
-          <div className="table-container">
-
-            <table className="data-table">
-
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Cliente</th>
-                  <th>Comentario</th>
-                  <th>Canal</th>
-                  <th>Categoría</th>
-                  <th>NLP</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-
-              <tbody>
-
-                {comentarios.map(
-                  (comentario) => (
-                    <tr key={comentario.id}>
-
-                      <td>
-                        {comentario.id}
-                      </td>
-
-                      <td>
-                        {nombreCliente(
-                          comentario.cliente_id
-                        )}
-                      </td>
-
-                      <td>
-                        {comentario.contenido}
-                      </td>
-
-                      <td>
-                        {comentario.canal}
-                      </td>
-
-                      <td>
-                        {comentario.categoria ??
-                          "—"}
-                      </td>
-
-                      <td>
-                        <span
-                          className={
-                            comentario.procesado
-                              ? "status-active"
-                              : "status-inactive"
-                          }
-                        >
-                          {comentario.procesado
-                            ? "Procesado"
-                            : "Pendiente"}
-                        </span>
-                      </td>
-
-                      <td>
-                        <button
-                          type="button"
-                          className="delete-button"
-                          onClick={() =>
-                            borrarComentario(
-                              comentario
-                            )
-                          }
-                        >
-                          Eliminar
-                        </button>
-                      </td>
-
-                    </tr>
-                  )
-                )}
-
-              </tbody>
-
-            </table>
-
-          </div>
-        )}
-
-      </section>
-
-
-      {/* ===================================== */}
-      {/* TIEMPOS */}
-      {/* ===================================== */}
-
-      <section className="dashboard-panel">
-
-        <div className="panel-header">
-          <div>
-            <h2>
-              Tiempos de atención
-            </h2>
-
-            <p>
-              {tiempos.length} registros
-            </p>
-          </div>
-        </div>
-
-
-        {tiempos.length === 0 ? (
-          <p>
-            No existen tiempos registrados.
-          </p>
-
-        ) : (
-          <div className="table-container">
-
-            <table className="data-table">
-
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Cliente</th>
-                  <th>Comentario</th>
-                  <th>Minutos</th>
-                  <th>Operador</th>
-                  <th>Fecha</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-
-              <tbody>
-
-                {tiempos.map(
-                  (tiempo) => (
-                    <tr key={tiempo.id}>
-
-                      <td>
-                        {tiempo.id}
-                      </td>
-
-                      <td>
-                        {nombreCliente(
-                          tiempo.cliente_id
-                        )}
-                      </td>
-
-                      <td>
-                        {tiempo.comentario_id
-                          ? `#${tiempo.comentario_id}`
-                          : "—"}
-                      </td>
-
-                      <td>
-                        <strong>
-                          {tiempo.tiempo_minutos}
-                          {" "}min
-                        </strong>
-                      </td>
-
-                      <td>
-                        {tiempo.operador ??
-                          "—"}
-                      </td>
-
-                      <td>
-                        {tiempo.fecha ??
-                          "—"}
-                      </td>
-
-                      <td>
-                        <button
-                          type="button"
-                          className="delete-button"
-                          onClick={() =>
-                            borrarTiempo(
-                              tiempo
-                            )
-                          }
-                        >
-                          Eliminar
-                        </button>
-                      </td>
-
-                    </tr>
-                  )
-                )}
-
-              </tbody>
-
-            </table>
-
-          </div>
-        )}
-
-      </section>
-
-    </main>
-  );
+import { useEffect, useState } from 'react';
+import { PageHeader } from '../components/PageHeader';
+import { EmptyState } from '../components/EmptyState';
+import { Clock, CheckCircle2, AlertCircle, RefreshCw, Search } from 'lucide-react';
+
+interface TicketAtencion {
+  id: number;
+  cliente: string;
+  tiempo_minutos: number;
+  estado: 'Completado' | 'En Proceso' | 'Pendiente';
+  fecha: string;
 }
 
+export function Atencion() {
+  const [tickets, setTickets] = useState<TicketAtencion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('');
 
-export default Atencion;
+  const fetchAtenciones = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/atencion');
+      if (res.ok) {
+        const data = await res.json();
+        setTickets(data);
+      }
+    } catch (err) {
+      console.error('Error al cargar atenciones:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAtenciones();
+  }, []);
+
+  const filteredTickets = tickets.filter(t =>
+    t.cliente.toLowerCase().includes(filter.toLowerCase()) ||
+    t.estado.toLowerCase().includes(filter.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Tiempo de Atención"
+        subtitle="Monitoreo de duraciones, resolución de tickets y estados de atención"
+      />
+
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="relative w-full sm:w-80">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <input
+            type="text"
+            placeholder="Buscar por cliente o estado..."
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+            className="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all"
+          />
+        </div>
+        <button
+          onClick={fetchAtenciones}
+          className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition-colors"
+          title="Actualizar"
+        >
+          <RefreshCw className="w-4 h-4" />
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="flex flex-col items-center justify-center h-48 space-y-2">
+          <RefreshCw className="w-6 h-6 text-indigo-600 animate-spin" />
+          <p className="text-xs font-semibold text-slate-400">Cargando registros...</p>
+        </div>
+      ) : filteredTickets.length === 0 ? (
+        <EmptyState
+          title="Sin registros de atención"
+          description="No se encontraron sesiones de atención registradas o coincidentes."
+        />
+      ) : (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-black text-slate-500 uppercase tracking-wider">
+                  <th className="p-4">ID</th>
+                  <th className="p-4">Cliente</th>
+                  <th className="p-4">Tiempo Resolutivo</th>
+                  <th className="p-4">Estado</th>
+                  <th className="p-4">Fecha</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs">
+                {filteredTickets.map(ticket => (
+                  <tr key={ticket.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="p-4 font-bold text-slate-400">#{ticket.id}</td>
+                    <td className="p-4 font-bold text-slate-800">{ticket.cliente}</td>
+                    <td className="p-4 font-medium text-slate-700">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                        {ticket.tiempo_minutos} min
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-black ${
+                        ticket.estado === 'Completado' 
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                          : ticket.estado === 'En Proceso'
+                          ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                          : 'bg-slate-100 text-slate-600 border border-slate-200'
+                      }`}>
+                        {ticket.estado === 'Completado' ? <CheckCircle2 className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+                        {ticket.estado}
+                      </span>
+                    </td>
+                    <td className="p-4 text-slate-400 font-medium">{ticket.fecha}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

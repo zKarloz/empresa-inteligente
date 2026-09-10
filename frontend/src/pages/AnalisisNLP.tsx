@@ -1,573 +1,103 @@
-import { useEffect, useState } from "react";
+import { useState } from 'react';
+import { PageHeader } from '../components/PageHeader';
+import { Brain, Sparkles, CheckCircle2, RefreshCw } from 'lucide-react';
 
-import {
-  obtenerComentarios,
-  type Comentario,
-} from "../services/comentarios";
+export function AnalisisNLP() {
+  const [texto, setTexto] = useState('');
+  const [resultado, setResultado] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
-import {
-  analizarTexto,
-  clasificarTexto,
-  analizarComentarioGuardado,
-  obtenerAnalisisNLP,
-  type AnalisisTexto,
-  type Clasificacion,
-  type AnalisisNLP,
-} from "../services/nlp";
-
-
-function AnalisisNLPPage() {
-  const [texto, setTexto] =
-    useState("");
-
-  const [resultadoTexto, setResultadoTexto] =
-    useState<AnalisisTexto | null>(null);
-
-  const [clasificacion, setClasificacion] =
-    useState<Clasificacion | null>(null);
-
-  const [comentarios, setComentarios] =
-    useState<Comentario[]>([]);
-
-  const [analisisGuardados, setAnalisisGuardados] =
-    useState<AnalisisNLP[]>([]);
-
-  const [procesando, setProcesando] =
-    useState(false);
-
-  const [comentarioProcesando, setComentarioProcesando] =
-    useState<number | null>(null);
-
-  const [error, setError] =
-    useState<string | null>(null);
-
-
-  // ============================================
-  // CARGAR DATOS
-  // ============================================
-
-  async function cargarDatos() {
+  const procesarTexto = async () => {
+    if (!texto.trim()) return;
+    setLoading(true);
     try {
-      const [
-        datosComentarios,
-        datosAnalisis,
-      ] = await Promise.all([
-        obtenerComentarios(),
-        obtenerAnalisisNLP(),
-      ]);
-
-      setComentarios(datosComentarios);
-      setAnalisisGuardados(datosAnalisis);
-      setError(null);
-
-    } catch (error) {
-      console.error(error);
-
-      setError(
-        "No se pudieron cargar los datos NLP"
-      );
-    }
-  }
-
-
-  useEffect(() => {
-    cargarDatos();
-  }, []);
-
-
-  // ============================================
-  // ANALIZAR TEXTO LIBRE
-  // ============================================
-
-  async function ejecutarAnalisis(
-    evento: React.FormEvent<HTMLFormElement>
-  ) {
-    evento.preventDefault();
-
-    if (!texto.trim()) {
-      setError(
-        "Escribe un comentario para analizar"
-      );
-      return;
-    }
-
-    try {
-      setProcesando(true);
-      setError(null);
-
-      const [
-        analisis,
-        resultadoClasificacion,
-      ] = await Promise.all([
-        analizarTexto(texto.trim()),
-        clasificarTexto(texto.trim()),
-      ]);
-
-      setResultadoTexto(analisis);
-
-      setClasificacion(
-        resultadoClasificacion
-      );
-
-    } catch (error) {
-      console.error(error);
-
-      setError(
-        "No se pudo analizar el texto"
-      );
-
+      const res = await fetch('http://localhost:5000/api/nlp/analizar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texto }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setResultado(json);
+      }
+    } catch (err) {
+      console.error('Error al procesar NLTK:', err);
     } finally {
-      setProcesando(false);
+      setLoading(false);
     }
-  }
-
-
-  // ============================================
-  // ANALIZAR COMENTARIO GUARDADO
-  // ============================================
-
-  async function procesarComentario(
-    comentario: Comentario
-  ) {
-    try {
-      setComentarioProcesando(
-        comentario.id
-      );
-
-      setError(null);
-
-      await analizarComentarioGuardado(
-        comentario.id
-      );
-
-      await cargarDatos();
-
-    } catch (error) {
-      console.error(error);
-
-      setError(
-        "No se pudo procesar el comentario"
-      );
-
-    } finally {
-      setComentarioProcesando(null);
-    }
-  }
-
-
-  const comentariosPendientes =
-    comentarios.filter(
-      (comentario) =>
-        !comentario.procesado
-    );
-
+  };
 
   return (
-    <main className="dashboard-page">
+    <div className="space-y-6">
+      <PageHeader
+        title="Análisis de Lenguaje Natural (NLTK)"
+        subtitle="Procesamiento inteligente de texto, tokenización y detección de sentimiento"
+      />
 
-      <header className="dashboard-header">
-        <div>
-          <h1>
-            Inteligencia NLP
-          </h1>
-
-          <p>
-            Tokenización, palabras frecuentes
-            y clasificación de comentarios
-          </p>
-        </div>
-      </header>
-
-
-      {error && (
-        <div className="message-error">
-          {error}
-        </div>
-      )}
-
-
-      {/* ===================================== */}
-      {/* ANÁLISIS LIBRE */}
-      {/* ===================================== */}
-
-      <section className="dashboard-panel">
-
-        <div className="panel-header">
-          <div>
-            <h2>
-              Analizar comentario
-            </h2>
-
-            <p>
-              Prueba el procesamiento NLP
-              con cualquier texto
-            </p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div className="flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-wider">
+            <Brain className="w-4 h-4 text-purple-600" />
+            <span>Entrada de Texto</span>
           </div>
-
-          <span className="panel-badge">
-            NLTK
-          </span>
+          <textarea
+            rows={5}
+            value={texto}
+            onChange={e => setTexto(e.target.value)}
+            placeholder="Escribe o pega aquí el comentario del cliente para analizar con NLTK..."
+            className="w-full p-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white outline-none transition-all resize-none"
+          />
+          <button
+            onClick={procesarTexto}
+            disabled={loading || !texto.trim()}
+            className="w-full flex items-center justify-center gap-2 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-purple-200"
+          >
+            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            Procesar con NLTK
+          </button>
         </div>
 
-
-        <form
-          className="client-form"
-          onSubmit={ejecutarAnalisis}
-        >
-
-          <div className="form-group">
-            <label htmlFor="texto-nlp">
-              Comentario
-            </label>
-
-            <textarea
-              id="texto-nlp"
-              rows={5}
-              value={texto}
-              onChange={(evento) =>
-                setTexto(
-                  evento.target.value
-                )
-              }
-              placeholder="Ejemplo: Necesito ayuda porque el sistema presenta un error"
-            />
-          </div>
-
-
-          <div className="form-actions">
-            <button
-              type="submit"
-              className="primary-button"
-              disabled={procesando}
-            >
-              {procesando
-                ? "Analizando..."
-                : "Analizar con NLTK"}
-            </button>
-          </div>
-
-        </form>
-
-
-        {/* RESULTADO */}
-
-        {resultadoTexto &&
-          clasificacion && (
-
-          <div className="nlp-result">
-
-            <div className="nlp-summary">
-
-              <div className="nlp-result-card">
-                <span>
-                  Palabras útiles
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Resultados del Análisis</span>
+              {resultado && (
+                <span className="text-[10px] bg-purple-50 text-purple-700 font-extrabold px-2 py-0.5 rounded-md border border-purple-200">
+                  Completado
                 </span>
-
-                <strong>
-                  {
-                    resultadoTexto
-                      .cantidad_palabras
-                  }
-                </strong>
-              </div>
-
-
-              <div className="nlp-result-card">
-                <span>
-                  Categoría
-                </span>
-
-                <strong>
-                  {
-                    clasificacion
-                      .categoria
-                  }
-                </strong>
-              </div>
-
-
-              <div className="nlp-result-card">
-                <span>
-                  Confianza
-                </span>
-
-                <strong>
-                  {(
-                    clasificacion.confianza *
-                    100
-                  ).toFixed(1)}
-                  %
-                </strong>
-              </div>
-
+              )}
             </div>
 
-
-            <div className="nlp-section">
-              <h3>
-                Tokens limpios
-              </h3>
-
-              <div className="word-list">
-                {
-                  resultadoTexto.tokens.map(
-                    (token, index) => (
-                      <span
-                        key={`${token}-${index}`}
-                      >
-                        {token}
+            {resultado ? (
+              <div className="space-y-3 text-xs">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-[11px] font-bold text-slate-400 block uppercase">Sentimiento Detectado</span>
+                  <span className="text-sm font-black text-slate-800 capitalize">{resultado.sentimiento || 'Neutral'}</span>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-[11px] font-bold text-slate-400 block uppercase">Tokens Relevantes</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {resultado.tokens?.map((t: string, i: number) => (
+                      <span key={i} className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-[10px] font-bold">
+                        {t}
                       </span>
-                    )
-                  )
-                }
+                    )) || <span className="text-slate-400">Sin tokens</span>}
+                  </div>
+                </div>
               </div>
-            </div>
-
-
-            <div className="nlp-section">
-              <h3>
-                Palabras frecuentes
-              </h3>
-
-              <div className="word-list">
-
-                {
-                  resultadoTexto
-                    .palabras_frecuentes
-                    .map(
-                      (palabra) => (
-                        <span
-                          key={
-                            palabra.palabra
-                          }
-                        >
-                          {palabra.palabra}
-                          {" "}
-                          ({palabra.frecuencia})
-                        </span>
-                      )
-                    )
-                }
-
+            ) : (
+              <div className="flex flex-col items-center justify-center h-40 text-center text-slate-400 space-y-2">
+                <Brain className="w-8 h-8 text-slate-300" />
+                <p className="text-xs font-medium">Ingresa un texto y presiona "Procesar" para ver la segmentación NLTK.</p>
               </div>
-            </div>
-
+            )}
           </div>
-        )}
 
-      </section>
-
-
-      {/* ===================================== */}
-      {/* COMENTARIOS PENDIENTES */}
-      {/* ===================================== */}
-
-      <section className="dashboard-panel">
-
-        <div className="panel-header">
-          <div>
-            <h2>
-              Comentarios pendientes
-            </h2>
-
-            <p>
-              {comentariosPendientes.length}
-              {" "}comentarios sin analizar
-            </p>
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Modelo activo basado en SciPy / NLTK
           </div>
         </div>
-
-
-        {comentariosPendientes.length === 0 ? (
-          <p>
-            Todos los comentarios han sido
-            procesados.
-          </p>
-
-        ) : (
-          <div className="table-container">
-
-            <table className="data-table">
-
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Comentario</th>
-                  <th>Canal</th>
-                  <th>Categoría manual</th>
-                  <th>Acción</th>
-                </tr>
-              </thead>
-
-
-              <tbody>
-
-                {comentariosPendientes.map(
-                  (comentario) => (
-                    <tr key={comentario.id}>
-
-                      <td>
-                        {comentario.id}
-                      </td>
-
-                      <td>
-                        {comentario.contenido}
-                      </td>
-
-                      <td>
-                        {comentario.canal}
-                      </td>
-
-                      <td>
-                        {comentario.categoria ??
-                          "—"}
-                      </td>
-
-                      <td>
-                        <button
-                          type="button"
-                          className="primary-button"
-                          disabled={
-                            comentarioProcesando ===
-                            comentario.id
-                          }
-                          onClick={() =>
-                            procesarComentario(
-                              comentario
-                            )
-                          }
-                        >
-                          {
-                            comentarioProcesando ===
-                            comentario.id
-                              ? "Procesando..."
-                              : "Analizar"
-                          }
-                        </button>
-                      </td>
-
-                    </tr>
-                  )
-                )}
-
-              </tbody>
-
-            </table>
-
-          </div>
-        )}
-
-      </section>
-
-
-      {/* ===================================== */}
-      {/* HISTORIAL NLP */}
-      {/* ===================================== */}
-
-      <section className="dashboard-panel">
-
-        <div className="panel-header">
-          <div>
-            <h2>
-              Análisis realizados
-            </h2>
-
-            <p>
-              {analisisGuardados.length}
-              {" "}resultados almacenados
-            </p>
-          </div>
-        </div>
-
-
-        {analisisGuardados.length === 0 ? (
-          <p>
-            Todavía no existen análisis
-            almacenados.
-          </p>
-
-        ) : (
-          <div className="table-container">
-
-            <table className="data-table">
-
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Comentario</th>
-                  <th>Palabras</th>
-                  <th>Categoría</th>
-                  <th>Confianza</th>
-                  <th>Fecha</th>
-                </tr>
-              </thead>
-
-
-              <tbody>
-
-                {analisisGuardados.map(
-                  (analisis) => (
-                    <tr key={analisis.id}>
-
-                      <td>
-                        {analisis.id}
-                      </td>
-
-                      <td>
-                        #{analisis.comentario_id}
-                      </td>
-
-                      <td>
-                        {analisis.cantidad_palabras}
-                      </td>
-
-                      <td>
-                        <strong>
-                          {
-                            analisis
-                              .categoria_detectada ??
-                            "—"
-                          }
-                        </strong>
-                      </td>
-
-                      <td>
-                        {analisis.confianza !==
-                        null
-                          ? `${(
-                              analisis.confianza *
-                              100
-                            ).toFixed(1)}%`
-                          : "—"}
-                      </td>
-
-                      <td>
-                        {
-                          analisis.fecha_analisis
-                            ? new Date(
-                                analisis
-                                  .fecha_analisis
-                              ).toLocaleString()
-                            : "—"
-                        }
-                      </td>
-
-                    </tr>
-                  )
-                )}
-
-              </tbody>
-
-            </table>
-
-          </div>
-        )}
-
-      </section>
-
-    </main>
+      </div>
+    </div>
   );
 }
-
-
-export default AnalisisNLPPage;
