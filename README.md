@@ -26,6 +26,27 @@
 6. Una vez instalado los *node_modules*, iniciar el servidor para interactuar con la página web:
 - `npm run dev`
 
+PARA BACKEND:
+
+1. Entrar a backend
+`cd backend`
+
+2. Crear el entorno virtual de Python
+`python -m venv .venv`
+
+3. Activar el entorno virtual de Python
+`source .venv/Scripts/activate` (En Git Bash)
+
+4. Instalar las librerías necesarias para el correcto funcionamiento del proyecto
+`pip install -r requirements.txt`
+
+5. Instalar NTLK
+`python -m nltk.downloader punkt_tab stopwords`
+
+6. Ejecutar el servidor
+`python -m uvicorn app.main:app --reload`
+`uvicorn app.main:app --reload`
+
 > [!NOTE]
 > Si te salió algún error consúltame para ayudarte, normal te respondo.
 > Por favor, todos deben tener el repositorio en su PC corriendo sin problemas.
