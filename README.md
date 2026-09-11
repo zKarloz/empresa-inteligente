@@ -24,6 +24,7 @@
 
 ### 4. Escribir en la terminal este código, para entrar a la **carpeta frontend**
 
+
 ```bash
 `cd frontend`
 ```
