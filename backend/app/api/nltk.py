@@ -4,6 +4,10 @@ from fastapi import (
     HTTPException
 )
 
+from app.services.comentario_nlp_service import (
+    procesar_comentario_nlp,
+)
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -68,6 +72,7 @@ async def analizar_comentario_guardado(
     comentario_id: int,
     db: AsyncSession = Depends(get_db)
 ):
+
     # Buscar comentario
     resultado = await db.execute(
         select(Comentario).where(
@@ -75,18 +80,24 @@ async def analizar_comentario_guardado(
         )
     )
 
-    comentario = resultado.scalar_one_or_none()
+    comentario = (
+        resultado.scalar_one_or_none()
+    )
+
 
     if comentario is None:
+
         raise HTTPException(
             status_code=404,
             detail="Comentario no encontrado"
         )
 
-    # Evitar analizar dos veces el mismo comentario
+
+    # Comprobar si ya fue analizado
     resultado_analisis = await db.execute(
         select(AnalisisNLP).where(
-            AnalisisNLP.comentario_id == comentario_id
+            AnalisisNLP.comentario_id
+            == comentario_id
         )
     )
 
@@ -94,58 +105,19 @@ async def analizar_comentario_guardado(
         resultado_analisis.scalar_one_or_none()
     )
 
+
     if analisis_existente is not None:
+
         raise HTTPException(
             status_code=409,
             detail="El comentario ya fue analizado"
         )
 
-    # Procesar texto con NLTK
-    resultado_nlp = analizar_texto(
-        comentario.contenido
+
+    return await procesar_comentario_nlp(
+        comentario,
+        db
     )
-
-    # Clasificar texto con NLTK
-    clasificacion = clasificar_texto(
-    comentario.contenido
-    )
-
-    # Crear análisis
-    nuevo_analisis = AnalisisNLP(
-        comentario_id=comentario.id,
-        
-        idioma="es",
-
-        cantidad_palabras=resultado_nlp[
-            "cantidad_palabras"
-        ],
-
-        palabras_limpias=resultado_nlp[
-            "tokens"
-        ],
-
-        palabras_frecuentes=resultado_nlp[
-            "palabras_frecuentes"
-        ],
-
-        categoria_detectada=clasificacion[
-            "categoria"
-        ],
-
-        confianza=clasificacion[
-            "confianza"
-        ]
-    )
-
-    db.add(nuevo_analisis)
-
-    # Marcar comentario como procesado
-    comentario.procesado = True
-
-    await db.commit()
-    await db.refresh(nuevo_analisis)
-
-    return nuevo_analisis
 
 @router.get(
     "/analisis",

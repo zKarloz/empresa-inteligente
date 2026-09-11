@@ -8,6 +8,10 @@ from fastapi import (
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.services.comentario_nlp_service import (
+    procesar_comentario_nlp,
+)
+
 from app.database.connection import get_db
 
 from app.models.cliente import Cliente
@@ -99,6 +103,11 @@ async def crear_comentario(
 
     nuevo_comentario = Comentario(
         cliente_id=datos.cliente_id,
+        nombre_cliente=datos.nombre_cliente,
+        apellido_cliente=datos.apellido_cliente,
+        empresa_cliente=datos.empresa_cliente,
+        telefono_cliente=datos.telefono_cliente,
+        correo_cliente=datos.correo_cliente,
         contenido=datos.contenido,
         canal=datos.canal,
         estado=datos.estado,
@@ -108,8 +117,44 @@ async def crear_comentario(
 
     db.add(nuevo_comentario)
 
+    # Primero se guarda el comentario.
+    # Así no se pierde si posteriormente falla NLTK.
     await db.commit()
     await db.refresh(nuevo_comentario)
+
+    comentario_id = nuevo_comentario.id
+
+    # ============================================
+    # ANALIZAR AUTOMÁTICAMENTE CON NLTK
+    # ============================================
+
+    try:
+        await procesar_comentario_nlp(
+            nuevo_comentario,
+            db
+        )
+
+    except Exception as error:
+        # Deshacer únicamente la operación fallida
+        # relacionada con el análisis NLP.
+        await db.rollback()
+
+        print(
+            "Error al procesar comentario con NLTK:",
+            error
+        )
+
+        # Después de rollback, recuperamos nuevamente
+        # el comentario que ya se guardó anteriormente.
+        resultado_comentario = await db.execute(
+            select(Comentario).where(
+                Comentario.id == comentario_id
+            )
+        )
+
+        nuevo_comentario = (
+            resultado_comentario.scalar_one()
+        )
 
     return nuevo_comentario
 
