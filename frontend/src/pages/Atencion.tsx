@@ -10,7 +10,6 @@ import {
 
 import {
   obtenerComentarios,
-  crearComentario,
   eliminarComentario,
   type Comentario,
 } from "../services/comentarios";
@@ -21,6 +20,11 @@ import {
   eliminarTiempoAtencion,
   type TiempoAtencion,
 } from "../services/tiempoAtencion";
+
+import {
+  obtenerAnalisisNLP,
+  type AnalisisNLP,
+} from "../services/nlp";
 
 
 function Atencion() {
@@ -42,20 +46,6 @@ function Atencion() {
     useState<string | null>(null);
 
 
-  // FORMULARIO COMENTARIO
-  const [clienteComentario, setClienteComentario] =
-    useState("");
-
-  const [contenido, setContenido] =
-    useState("");
-
-  const [canal, setCanal] =
-    useState("web");
-
-  const [categoria, setCategoria] =
-    useState("");
-
-
   // FORMULARIO TIEMPO
   const [clienteTiempo, setClienteTiempo] =
     useState("");
@@ -70,6 +60,9 @@ function Atencion() {
     useState("");
 
 
+  const [analisisGuardados, setAnalisisGuardados] =
+  useState<AnalisisNLP[]>([]);
+
   // ============================================
   // CARGAR DATOS
   // ============================================
@@ -82,15 +75,18 @@ function Atencion() {
         datosClientes,
         datosComentarios,
         datosTiempos,
+        datosAnalisis,
       ] = await Promise.all([
         obtenerClientes(),
         obtenerComentarios(),
         obtenerTiemposAtencion(),
+        obtenerAnalisisNLP(),
       ]);
 
       setClientes(datosClientes);
       setComentarios(datosComentarios);
       setTiempos(datosTiempos);
+      setAnalisisGuardados(datosAnalisis);
 
       setError(null);
 
@@ -132,54 +128,6 @@ function Atencion() {
       });
     }
   }, [location.hash, cargando]);
-
-
-  // ============================================
-  // CREAR COMENTARIO
-  // ============================================
-
-  async function guardarComentario(
-    evento: React.FormEvent<HTMLFormElement>
-  ) {
-    evento.preventDefault();
-
-    if (!contenido.trim()) {
-      setError(
-        "El comentario no puede estar vacío"
-      );
-      return;
-    }
-
-    try {
-      await crearComentario({
-        cliente_id:
-          clienteComentario
-            ? Number(clienteComentario)
-            : null,
-
-        contenido: contenido.trim(),
-        canal,
-        estado: "pendiente",
-
-        categoria:
-          categoria || null,
-      });
-
-      setContenido("");
-      setClienteComentario("");
-      setCanal("web");
-      setCategoria("");
-
-      await cargarDatos();
-
-    } catch (error) {
-      console.error(error);
-
-      setError(
-        "No se pudo registrar el comentario"
-      );
-    }
-  }
 
 
   // ============================================
@@ -314,6 +262,38 @@ function Atencion() {
       `Cliente #${clienteId}`;
   }
 
+  function nombreRemitente(comentario: Comentario) {
+  const nombreCompleto = [
+    comentario.nombre_cliente,
+    comentario.apellido_cliente,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  return nombreCompleto || nombreCliente(comentario.cliente_id);
+}
+
+  function categoriaNLP(comentario: Comentario) {
+    const analisis = analisisGuardados.find(
+      (item) => item.comentario_id === comentario.id
+    );
+
+    return (
+      analisis?.categoria_detectada ??
+      (comentario.procesado ? "Sin categoría detectada" : "Pendiente")
+    );
+  }
+
+  function nombreEnTiempo(tiempo: TiempoAtencion) {
+    const comentario = comentarios.find(
+      (item) => item.id === tiempo.comentario_id
+    );
+
+    return comentario
+      ? nombreRemitente(comentario)
+      : nombreCliente(tiempo.cliente_id);
+  }
 
   // ============================================
   // INTERFAZ
@@ -345,177 +325,10 @@ function Atencion() {
       {/* FORMULARIOS */}
       {/* ===================================== */}
 
-      <section className="dashboard-grid">
-
-        {/* REGISTRAR SOLICITUD / COMENTARIO */}
-
-        <article
-          id="solicitudes"
-          className="dashboard-panel"
-        >
-
-          <div className="panel-header">
-            <div>
-              <h2>
-                Nuevo comentario
-              </h2>
-
-              <p>
-                Registrar una solicitud o comentario
-              </p>
-            </div>
-          </div>
-
-
-          <form
-            className="client-form"
-            onSubmit={guardarComentario}
-          >
-
-            <div className="form-group">
-              <label>
-                Cliente
-              </label>
-
-              <select
-                value={clienteComentario}
-                onChange={(evento) =>
-                  setClienteComentario(
-                    evento.target.value
-                  )
-                }
-              >
-                <option value="">
-                  Sin cliente asociado
-                </option>
-
-                {clientes.map((cliente) => (
-                  <option
-                    key={cliente.id}
-                    value={cliente.id}
-                  >
-                    {cliente.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-
-            <div className="form-group">
-              <label>
-                Comentario *
-              </label>
-
-              <textarea
-                rows={5}
-                value={contenido}
-                onChange={(evento) =>
-                  setContenido(
-                    evento.target.value
-                  )
-                }
-                required
-              />
-            </div>
-
-
-            <div className="form-grid">
-
-              <div className="form-group">
-                <label>
-                  Canal
-                </label>
-
-                <select
-                  value={canal}
-                  onChange={(evento) =>
-                    setCanal(
-                      evento.target.value
-                    )
-                  }
-                >
-                  <option value="web">
-                    Web
-                  </option>
-
-                  <option value="email">
-                    Email
-                  </option>
-
-                  <option value="telefono">
-                    Teléfono
-                  </option>
-
-                  <option value="whatsapp">
-                    WhatsApp
-                  </option>
-                </select>
-              </div>
-
-
-              <div className="form-group">
-                <label>
-                  Categoría
-                </label>
-
-                <select
-                  value={categoria}
-                  onChange={(evento) =>
-                    setCategoria(
-                      evento.target.value
-                    )
-                  }
-                >
-                  <option value="">
-                    Sin categoría
-                  </option>
-
-                  <option value="VENTAS">
-                    Ventas
-                  </option>
-
-                  <option value="SOPORTE">
-                    Soporte
-                  </option>
-
-                  <option value="RECLAMO">
-                    Reclamo
-                  </option>
-
-                  <option value="CONSULTA">
-                    Consulta
-                  </option>
-
-                  <option value="FELICITACION">
-                    Felicitación
-                  </option>
-
-                  <option value="OTROS">
-                    Otros
-                  </option>
-                </select>
-              </div>
-
-            </div>
-
-
-            <div className="form-actions">
-              <button
-                type="submit"
-                className="primary-button"
-              >
-                Registrar comentario
-              </button>
-            </div>
-
-          </form>
-
-        </article>
+      <section className="dashboard-panel">
 
 
         {/* TIEMPO */}
-
-        <article className="dashboard-panel">
 
           <div className="panel-header">
             <div>
@@ -587,11 +400,8 @@ function Atencion() {
                       key={comentario.id}
                       value={comentario.id}
                     >
-                      #{comentario.id} -{" "}
-                      {comentario.contenido.slice(
-                        0,
-                        35
-                      )}
+                      #{comentario.id} - {nombreRemitente(comentario)} -{" "}
+                      {comentario.contenido.slice(0, 35)}
                     </option>
                   )
                 )}
@@ -651,8 +461,6 @@ function Atencion() {
 
           </form>
 
-        </article>
-
       </section>
 
 
@@ -685,82 +493,64 @@ function Atencion() {
           <div className="table-container">
 
             <table className="data-table">
-
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Cliente</th>
+                  <th>Nombre y apellido</th>
+                  <th>Empresa</th>
+                  <th>Teléfono</th>
+                  <th>Correo</th>
                   <th>Comentario</th>
                   <th>Canal</th>
-                  <th>Categoría</th>
+                  <th>Categoría NLTK</th>
                   <th>NLP</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
 
               <tbody>
+                {comentarios.map((comentario) => (
+                  <tr key={comentario.id}>
+                    <td>{comentario.id}</td>
 
-                {comentarios.map(
-                  (comentario) => (
-                    <tr key={comentario.id}>
+                    <td>{nombreRemitente(comentario)}</td>
 
-                      <td>
-                        {comentario.id}
-                      </td>
+                    <td>{comentario.empresa_cliente || "—"}</td>
 
-                      <td>
-                        {nombreCliente(
-                          comentario.cliente_id
-                        )}
-                      </td>
+                    <td>{comentario.telefono_cliente || "—"}</td>
 
-                      <td>
-                        {comentario.contenido}
-                      </td>
+                    <td>{comentario.correo_cliente || "—"}</td>
 
-                      <td>
-                        {comentario.canal}
-                      </td>
+                    <td>{comentario.contenido}</td>
 
-                      <td>
-                        {comentario.categoria ??
-                          "—"}
-                      </td>
+                    <td>{comentario.canal}</td>
 
-                      <td>
-                        <span
-                          className={
-                            comentario.procesado
-                              ? "status-active"
-                              : "status-inactive"
-                          }
-                        >
-                          {comentario.procesado
-                            ? "Procesado"
-                            : "Pendiente"}
-                        </span>
-                      </td>
+                    <td>{categoriaNLP(comentario)}</td>
 
-                      <td>
-                        <button
-                          type="button"
-                          className="delete-button"
-                          onClick={() =>
-                            borrarComentario(
-                              comentario
-                            )
-                          }
-                        >
-                          Eliminar
-                        </button>
-                      </td>
+                    <td>
+                      <span
+                        className={
+                          comentario.procesado
+                            ? "status-active"
+                            : "status-inactive"
+                        }
+                      >
+                        {comentario.procesado ? "Procesado" : "Pendiente"}
+                      </span>
+                    </td>
 
-                    </tr>
-                  )
-                )}
-
+                    <td>
+                      <button
+                        type="button"
+                        className="delete-button"
+                        onClick={() => borrarComentario(comentario)}
+                      >
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
-
             </table>
 
           </div>
@@ -821,9 +611,7 @@ function Atencion() {
                       </td>
 
                       <td>
-                        {nombreCliente(
-                          tiempo.cliente_id
-                        )}
+                       {nombreEnTiempo(tiempo)}
                       </td>
 
                       <td>

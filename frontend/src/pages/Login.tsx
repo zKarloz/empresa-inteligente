@@ -62,7 +62,7 @@ function Login() {
           "true"
         );
 
-        navigate("/", {
+        navigate("/dashboard", {
           replace: true,
         });
 
@@ -87,7 +87,7 @@ function Login() {
       "true"
     );
 
-    navigate("/", {
+    navigate("/dashboard", {
       replace: true,
     });
 

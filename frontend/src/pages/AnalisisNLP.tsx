@@ -30,6 +30,8 @@ function AnalisisNLPPage() {
   // ESTADOS
   // ============================================
 
+  const [avisoComentario, setAvisoComentario] = useState("");
+
   const [texto, setTexto] =
     useState("");
 
@@ -61,34 +63,94 @@ function AnalisisNLPPage() {
   // CARGAR DATOS
   // ============================================
 
-  async function cargarDatos() {
-    try {
+ async function cargarDatos() {
+  try {
+    const [datosComentarios, datosAnalisis] = await Promise.all([
+      obtenerComentarios(),
+      obtenerAnalisisNLP(),
+    ]);
 
-      const [
-        datosComentarios,
-        datosAnalisis,
-      ] = await Promise.all([
-        obtenerComentarios(),
-        obtenerAnalisisNLP(),
-      ]);
+    setComentarios(datosComentarios);
+    setAnalisisGuardados(datosAnalisis);
+    setError(null);
 
-      setComentarios(datosComentarios);
+    // Limpiar resultados anteriores para no mezclarlos
+    // con los de otro comentario.
+    setTexto("");
+    setResultadoTexto(null);
+    setClasificacion(null);
+    setAvisoComentario("");
 
-      setAnalisisGuardados(
-        datosAnalisis
+    // Ordenar por fecha descendente.
+    // Si las fechas coinciden, usar el ID más alto.
+    const fechaEnMilisegundos = (fecha: string | null) => {
+      const valor = fecha ? Date.parse(fecha) : NaN;
+      return Number.isFinite(valor) ? valor : 0;
+    };
+
+    const ultimoComentario = [...datosComentarios].sort(
+      (a, b) =>
+        fechaEnMilisegundos(b.fecha) -
+          fechaEnMilisegundos(a.fecha) ||
+        b.id - a.id
+    )[0];
+
+    if (!ultimoComentario) {
+      setAvisoComentario("Todavía no hay comentarios recibidos.");
+      return;
+    }
+
+    // Mostrar el contenido original del último comentario.
+    setTexto(ultimoComentario.contenido);
+
+    // Buscar el análisis de ESE comentario por su ID.
+    const analisis = datosAnalisis.find(
+      (item) => item.comentario_id === ultimoComentario.id
+    );
+
+    if (!ultimoComentario.procesado || !analisis) {
+      setAvisoComentario(
+        `Último comentario recibido: #${ultimoComentario.id}. ` +
+        "Su análisis todavía no está disponible."
       );
+      return;
+    }
 
-      setError(null);
+    setResultadoTexto({
+      cantidad_palabras: analisis.cantidad_palabras,
+      tokens: analisis.palabras_limpias ?? [],
+      palabras_frecuentes: analisis.palabras_frecuentes ?? [],
+    });
 
-    } catch (error) {
+    if (
+      analisis.categoria_detectada !== null &&
+      analisis.confianza !== null
+    ) {
+      setClasificacion({
+        categoria: analisis.categoria_detectada,
+        confianza: analisis.confianza,
+      });
 
-      console.error(error);
-
-      setError(
-        "No se pudieron cargar los datos NLP"
+      setAvisoComentario(
+        `Último comentario recibido: #${ultimoComentario.id}. ` +
+        "Mostrando el análisis NLTK guardado."
+      );
+    } else {
+      setAvisoComentario(
+        `Último comentario recibido: #${ultimoComentario.id}. ` +
+        "El análisis guardado tiene una clasificación incompleta."
       );
     }
+  } catch (error) {
+    console.error(error);
+
+    setTexto("");
+    setResultadoTexto(null);
+    setClasificacion(null);
+    setAvisoComentario("");
+    setError("No se pudieron cargar los datos NLP");
   }
+}
 
 
   useEffect(() => {
@@ -172,6 +234,9 @@ function AnalisisNLPPage() {
         resultadoClasificacion
       );
 
+      setAvisoComentario(
+        "Mostrando el resultado del análisis manual del texto."
+      );
 
     } catch (error) {
 
@@ -336,8 +401,9 @@ function AnalisisNLPPage() {
             </h2>
 
             <p>
-              Prueba el procesamiento NLP
-              con cualquier texto
+              Al entrar se muestra el último comentario recibido
+              y su análisis guardado. También puedes analizar
+              otro texto manualmente.
             </p>
 
           </div>
@@ -349,6 +415,11 @@ function AnalisisNLPPage() {
 
         </div>
 
+        {avisoComentario && (
+          <p role="status">
+            {avisoComentario}
+          </p>
+        )}
 
         <form
           className="client-form"
@@ -366,11 +437,14 @@ function AnalisisNLPPage() {
               id="texto-nlp"
               rows={5}
               value={texto}
-              onChange={(evento) =>
-                setTexto(
-                  evento.target.value
-                )
-              }
+              onChange={(evento) => {
+                setTexto(evento.target.value);
+                setResultadoTexto(null);
+                setClasificacion(null);
+                setAvisoComentario(
+                  "Texto editado. Pulsa Analizar con NLTK para obtener sus resultados."
+                );
+              }}
               placeholder="Ejemplo: Necesito ayuda porque el sistema presenta un error"
             />
 

@@ -32,6 +32,32 @@ class Comentario(Base):
         nullable=True
     )
 
+    # CAMBIO DE TAREA 04
+    nombre_cliente: Mapped[str | None] = mapped_column(
+        String(150),
+        nullable=True
+    )
+
+    apellido_cliente: Mapped[str | None] = mapped_column(
+        String(150),
+        nullable=True
+    )
+
+    empresa_cliente: Mapped[str | None] = mapped_column(
+        String(200),
+        nullable=True
+    )
+
+    telefono_cliente: Mapped[str | None] = mapped_column(
+        String(30),
+        nullable=True
+    )
+
+    correo_cliente: Mapped[str | None] = mapped_column(
+        String(254),
+        nullable=True
+    )
+
     contenido: Mapped[str] = mapped_column(
         Text,
         nullable=False

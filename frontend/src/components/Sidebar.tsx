@@ -17,7 +17,6 @@ import {
   List,
   UserPlus,
   History,
-  Inbox,
   Tags,
   ScanSearch,
   ChevronDown,
@@ -79,7 +78,7 @@ function Sidebar() {
         {/* DASHBOARD */}
 
         <NavLink
-          to="/"
+          to="/dashboard"
           className={({ isActive }) =>
             isActive
               ? "sidebar-link active"
@@ -219,11 +218,6 @@ function Sidebar() {
 
           {grupoAbierto === "atencion" && (
             <div className="sidebar-submenu">
-
-              <Link to="/atencion#solicitudes">
-                <Inbox size={13} />
-                Registrar solicitud
-              </Link>
 
                <Link to="/atencion#comentarios">
                 <MessageSquare size={13} />

@@ -4,6 +4,13 @@ import { apiFetch } from "./api";
 export interface Comentario {
   id: number;
   cliente_id: number | null;
+
+  // NUEVO
+  nombre_cliente: string | null;
+  apellido_cliente: string | null;
+  empresa_cliente: string | null;
+  telefono_cliente: string | null;
+  correo_cliente: string | null;
   contenido: string;
   canal: string;
   estado: string;
@@ -12,13 +19,19 @@ export interface Comentario {
   procesado: boolean;
 }
 
-
 export interface ComentarioCreate {
-  cliente_id?: number | null;
+  cliente_id: number | null;
+
+  // NUEVO
+  nombre_cliente: string | null;
+  apellido_cliente: string | null;
+  empresa_cliente: string | null;
+  telefono_cliente: string | null;
+  correo_cliente: string | null;
   contenido: string;
-  canal?: string;
-  estado?: string;
-  categoria?: string | null;
+  canal: string;
+  estado: string;
+  categoria: string | null;
 }
 
 

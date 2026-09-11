@@ -8,7 +8,6 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import ProtectedRoute from "../components/ProtectedRoute";
 
 import Login from "../pages/Login";
-
 import Dashboard from "../pages/Dashboard";
 import Clientes from "../pages/Clientes";
 import Atencion from "../pages/Atencion";
@@ -16,32 +15,31 @@ import AnalisisNLP from "../pages/AnalisisNLP";
 import Metricas from "../pages/Metricas";
 import Reportes from "../pages/Reportes";
 import Configuracion from "../pages/Configuracion";
-
+import LandingPage from "../pages/LandingPage";
 
 function AppRoutes() {
   return (
     <Routes>
 
-      {/* ===================================== */}
-      {/* LOGIN - RUTA PÚBLICA */}
-      {/* ===================================== */}
+      {/* LANDING PÚBLICA */}
+      <Route
+        path="/"
+        element={<LandingPage />}
+      />
 
+      {/* LOGIN PÚBLICO */}
       <Route
         path="/login"
         element={<Login />}
       />
 
-
-      {/* ===================================== */}
-      {/* RUTAS PROTEGIDAS */}
-      {/* ===================================== */}
-
+      {/* RUTAS PRIVADAS */}
       <Route element={<ProtectedRoute />}>
 
         <Route element={<DashboardLayout />}>
 
           <Route
-            path="/"
+            path="/dashboard"
             element={<Dashboard />}
           />
 
@@ -79,11 +77,7 @@ function AppRoutes() {
 
       </Route>
 
-
-      {/* ===================================== */}
       {/* RUTA DESCONOCIDA */}
-      {/* ===================================== */}
-
       <Route
         path="*"
         element={<Navigate to="/" replace />}
@@ -92,6 +86,5 @@ function AppRoutes() {
     </Routes>
   );
 }
-
 
 export default AppRoutes;
