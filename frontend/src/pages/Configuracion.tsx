@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   useLocation,
   useNavigate,
@@ -9,6 +9,8 @@ import {
   ShieldCheck,
   Mail,
   LogOut,
+  Camera,
+  CameraOff,
 } from "lucide-react";
 
 import FaceRecognition from
@@ -22,6 +24,9 @@ function Configuracion() {
 
   const location = useLocation();
   const navigate = useNavigate();
+
+  const [camaraRegistroActiva, setCamaraRegistroActiva] =
+    useState(false);
 
 
   // ============================================
@@ -255,45 +260,91 @@ function Configuracion() {
         </div>
 
 
-        <FaceRecognition
-          onRegistroCompleto={async (
-            embeddings
-          ) => {
+        <div className="form-actions">
 
-            try {
+          {!camaraRegistroActiva ? (
 
-              const respuesta =
-                await registrarBiometria(
-                  "admin@empresa.com",
-                  embeddings
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() =>
+                setCamaraRegistroActiva(true)
+              }
+            >
+              <Camera size={16} />
+              Encender cámara
+            </button>
+
+          ) : (
+
+            <button
+              type="button"
+              className="delete-button"
+              onClick={() =>
+                setCamaraRegistroActiva(false)
+              }
+            >
+              <CameraOff size={16} />
+              Apagar cámara
+            </button>
+
+          )}
+
+        </div>
+
+
+        {camaraRegistroActiva ? (
+
+          <FaceRecognition
+            onRegistroCompleto={async (
+              embeddings
+            ) => {
+
+              try {
+
+                const respuesta =
+                  await registrarBiometria(
+                    "admin@empresa.com",
+                    embeddings
+                  );
+
+
+                console.log(
+                  respuesta
                 );
 
 
-              console.log(
-                respuesta
-              );
+                alert(
+                  "Biometría facial guardada correctamente."
+                );
+
+                setCamaraRegistroActiva(false);
+
+              } catch (error) {
+
+                console.error(
+                  "Error registrando biometría:",
+                  error
+                );
 
 
-              alert(
-                "Biometría facial guardada correctamente."
-              );
+                alert(
+                  "No se pudo guardar la biometría."
+                );
 
-            } catch (error) {
+              }
 
-              console.error(
-                "Error registrando biometría:",
-                error
-              );
+            }}
+          />
 
+        ) : (
 
-              alert(
-                "No se pudo guardar la biometría."
-              );
+          <p>
+            La cámara está apagada. Enciéndela únicamente
+            cuando quieras registrar un rostro.
+          </p>
 
-            }
-
-          }}
-        />
+        )}
 
       </section>
 

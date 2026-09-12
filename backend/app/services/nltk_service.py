@@ -170,7 +170,31 @@ DATOS_ENTRENAMIENTO = [
     )
 ]
 
+DATOS_SENTIMIENTO = [
+    # POSITIVO
+    ("La atención fue excelente", "POSITIVO"),
+    ("Estoy muy satisfecho con el servicio", "POSITIVO"),
+    ("Muchas gracias por la ayuda", "POSITIVO"),
+    ("El equipo hizo un buen trabajo", "POSITIVO"),
+    ("El servicio fue rápido y eficiente", "POSITIVO"),
+    ("Me atendieron muy bien", "POSITIVO"),
 
+    # NEGATIVO
+    ("La atención fue pésima", "NEGATIVO"),
+    ("Estoy molesto con el servicio", "NEGATIVO"),
+    ("No solucionaron mi problema", "NEGATIVO"),
+    ("El sistema funciona muy mal", "NEGATIVO"),
+    ("Demoraron demasiado en atenderme", "NEGATIVO"),
+    ("Estoy inconforme con la atención", "NEGATIVO"),
+
+    # NEUTRAL
+    ("Quiero conocer el horario de atención", "NEUTRAL"),
+    ("Necesito información sobre sus servicios", "NEUTRAL"),
+    ("Cuál es el precio del producto", "NEUTRAL"),
+    ("Deseo comunicarme con la empresa", "NEUTRAL"),
+    ("Quisiera realizar una consulta", "NEUTRAL"),
+    ("Dónde se encuentra su oficina", "NEUTRAL"),
+]
 
 # CARACTERÍSTICAS PARA NLTK
 
@@ -209,7 +233,99 @@ def entrenar_clasificador():
 
 CLASIFICADOR = entrenar_clasificador()
 
+def entrenar_clasificador_sentimiento():
+    entrenamiento = []
 
+    for texto, sentimiento in DATOS_SENTIMIENTO:
+        palabras = limpiar_texto(texto)
+
+        caracteristicas = extraer_caracteristicas(
+            palabras
+        )
+
+        entrenamiento.append(
+            (caracteristicas, sentimiento)
+        )
+
+    return NaiveBayesClassifier.train(
+        entrenamiento
+    )
+
+
+CLASIFICADOR_SENTIMIENTO = (
+    entrenar_clasificador_sentimiento()
+)
+
+
+def clasificar_sentimiento(texto: str) -> str:
+    palabras = limpiar_texto(texto)
+
+    caracteristicas = extraer_caracteristicas(
+        palabras
+    )
+
+    return CLASIFICADOR_SENTIMIENTO.classify(
+        caracteristicas
+    )
+
+
+def determinar_prioridad(
+    texto: str,
+    categoria: str
+) -> str:
+    texto_normalizado = texto.lower()
+
+    indicadores_alta = [
+        "urgente",
+        "inmediatamente",
+        "no funciona",
+        "no puedo acceder",
+        "caído",
+        "caida",
+        "caída",
+        "pésimo",
+        "pesimo",
+        "fraude",
+        "reembolso",
+        "cancelar",
+        "demoró demasiado",
+    ]
+
+    indicadores_media = [
+        "problema",
+        "error",
+        "ayuda",
+        "soporte",
+        "demora",
+        "cotización",
+        "cotizacion",
+        "contratar",
+        "precio",
+    ]
+
+    if (
+        categoria == "RECLAMO"
+        or any(
+            indicador in texto_normalizado
+            for indicador in indicadores_alta
+        )
+    ):
+        return "ALTA"
+
+    if (
+        categoria in {
+            "SOPORTE",
+            "VENTAS",
+            "CONSULTA",
+        }
+        or any(
+            indicador in texto_normalizado
+            for indicador in indicadores_media
+        )
+    ):
+        return "MEDIA"
+
+    return "BAJA"
 
 # CLASIFICAR TEXTO
 
@@ -231,7 +347,18 @@ def clasificar_texto(texto: str) -> dict:
         categoria
     )
 
+    sentimiento = clasificar_sentimiento(
+        texto
+    )
+
+    prioridad = determinar_prioridad(
+        texto,
+        categoria
+    )
+
     return {
         "categoria": categoria,
-        "confianza": float(confianza)
+        "confianza": float(confianza),
+        "sentimiento": sentimiento,
+        "prioridad": prioridad,
     }

@@ -8,6 +8,7 @@ import {
   LockKeyhole,
   ShieldCheck,
   ScanFace,
+  MessageSquare,
 } from "lucide-react";
 
 
@@ -135,6 +136,23 @@ function Login() {
             <span>
               Acceso seguro al sistema empresarial
             </span>
+
+          </div>
+
+
+          <div className="login-landing-action">
+
+            <button
+              type="button"
+              className="login-landing-button"
+              onClick={() => navigate("/")}
+            >
+
+              <MessageSquare size={16} />
+
+              Ir al formulario público
+
+            </button>
 
           </div>
 
@@ -345,14 +363,6 @@ function Login() {
             <small>
               Contraseña: 123456
             </small>
-
-          </div>
-
-
-          <div className="login-future">
-
-            Próximamente: autenticación
-            biométrica facial
 
           </div>
 

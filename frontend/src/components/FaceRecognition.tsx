@@ -160,6 +160,17 @@ function FaceRecognition({
           });
 
 
+        if (!activoRef.current) {
+
+          stream.getTracks().forEach(
+            (track) => track.stop()
+          );
+
+          return;
+
+        }
+
+
         streamRef.current =
           stream;
 
@@ -169,6 +180,13 @@ function FaceRecognition({
 
 
         if (!video) {
+
+          stream.getTracks().forEach(
+            (track) => track.stop()
+          );
+
+          streamRef.current = null;
+
           return;
         }
 
@@ -227,6 +245,9 @@ function FaceRecognition({
           (track) =>
             track.stop()
         );
+
+
+      streamRef.current = null;
 
     };
 

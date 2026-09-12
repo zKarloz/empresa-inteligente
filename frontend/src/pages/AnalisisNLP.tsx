@@ -32,6 +32,8 @@ function AnalisisNLPPage() {
 
   const [avisoComentario, setAvisoComentario] = useState("");
 
+  const [idioma, setIdioma] = useState("es");
+
   const [texto, setTexto] =
     useState("");
 
@@ -58,7 +60,7 @@ function AnalisisNLPPage() {
   const [error, setError] =
     useState<string | null>(null);
 
-
+  
   // ============================================
   // CARGAR DATOS
   // ============================================
@@ -79,6 +81,7 @@ function AnalisisNLPPage() {
     setTexto("");
     setResultadoTexto(null);
     setClasificacion(null);
+    setIdioma("es");
     setAvisoComentario("");
 
     // Ordenar por fecha descendente.
@@ -116,6 +119,8 @@ function AnalisisNLPPage() {
       return;
     }
 
+    setIdioma(analisis.idioma);
+
     setResultadoTexto({
       cantidad_palabras: analisis.cantidad_palabras,
       tokens: analisis.palabras_limpias ?? [],
@@ -129,6 +134,8 @@ function AnalisisNLPPage() {
       setClasificacion({
         categoria: analisis.categoria_detectada,
         confianza: analisis.confianza,
+        sentimiento: analisis.sentimiento,
+        prioridad: analisis.prioridad,
       });
 
       setAvisoComentario(
@@ -148,6 +155,7 @@ function AnalisisNLPPage() {
     setResultadoTexto(null);
     setClasificacion(null);
     setAvisoComentario("");
+    setIdioma("es");
     setError("No se pudieron cargar los datos NLP");
   }
 }
@@ -233,6 +241,8 @@ function AnalisisNLPPage() {
       setClasificacion(
         resultadoClasificacion
       );
+      
+      setIdioma("es");
 
       setAvisoComentario(
         "Mostrando el resultado del análisis manual del texto."
@@ -333,12 +343,64 @@ function AnalisisNLPPage() {
 
 
   const categoriasOrdenadas =
-    Object.entries(
-      resumenCategorias
-    ).sort(
-      (a, b) => b[1] - a[1]
-    );
+  Object.entries(
+    resumenCategorias
+  ).sort(
+    (a, b) => b[1] - a[1]
+  );
 
+
+function claseConfianza(
+  confianza: number
+) {
+  if (confianza >= 0.70) {
+    return "nlp-card-green";
+  }
+
+  if (confianza >= 0.40) {
+    return "nlp-card-yellow";
+  }
+
+  return "nlp-card-red";
+}
+
+
+function claseSentimiento(
+  sentimiento: string | null
+) {
+  switch (sentimiento?.toUpperCase()) {
+    case "POSITIVO":
+      return "nlp-card-green";
+
+    case "NEUTRAL":
+      return "nlp-card-yellow";
+
+    case "NEGATIVO":
+      return "nlp-card-red";
+
+    default:
+      return "";
+  }
+}
+
+
+function clasePrioridad(
+  prioridad: string | null
+) {
+  switch (prioridad?.toUpperCase()) {
+    case "ALTA":
+      return "nlp-card-red";
+
+    case "MEDIA":
+      return "nlp-card-yellow";
+
+    case "BAJA":
+      return "nlp-card-green";
+
+    default:
+      return "";
+  }
+}
 
   // ============================================
   // INTERFAZ
@@ -441,6 +503,7 @@ function AnalisisNLPPage() {
                 setTexto(evento.target.value);
                 setResultadoTexto(null);
                 setClasificacion(null);
+                setIdioma("es");
                 setAvisoComentario(
                   "Texto editado. Pulsa Analizar con NLTK para obtener sus resultados."
                 );
@@ -481,56 +544,66 @@ function AnalisisNLPPage() {
 
             <div className="nlp-summary">
 
-
               <div className="nlp-result-card">
-
-                <span>
-                  Palabras útiles
-                </span>
+                <span>Idioma</span>
 
                 <strong>
-                  {
-                    resultadoTexto
-                      .cantidad_palabras
-                  }
+                  {idioma === "es"
+                    ? "Español"
+                    : idioma.toUpperCase()}
                 </strong>
-
               </div>
 
-
               <div className="nlp-result-card">
-
-                <span>
-                  Categoría
-                </span>
+                <span>Palabras útiles</span>
 
                 <strong>
-                  {
-                    clasificacion
-                      .categoria
-                  }
+                  {resultadoTexto.cantidad_palabras}
                 </strong>
-
               </div>
 
-
               <div className="nlp-result-card">
-
-                <span>
-                  Confianza
-                </span>
+                <span>Categoría</span>
 
                 <strong>
-
-                  {(
-                    clasificacion
-                      .confianza * 100
-                  ).toFixed(1)}
-
-                  %
-
+                  {clasificacion.categoria}
                 </strong>
+              </div>
 
+              <div
+                className={`nlp-result-card ${claseConfianza(
+                  clasificacion.confianza
+                )}`}
+              >
+                <span>Confianza</span>
+
+                <strong>
+                  {(clasificacion.confianza * 100).toFixed(1)}%
+                </strong>
+              </div>
+
+              <div
+                className={`nlp-result-card ${claseSentimiento(
+                  clasificacion.sentimiento
+                )}`}
+              >
+                <span>Sentimiento</span>
+
+                <strong>
+                  {clasificacion.sentimiento ?? "—"}
+                </strong>
+              </div>
+
+              <div
+                className={`nlp-result-card ${clasePrioridad(
+                  clasificacion.prioridad
+                )}`}
+              >
+                <span>Prioridad</span>
+
+                <strong>
+                  {clasificacion.prioridad ?? "—"}
+                </strong>
               </div>
 
             </div>
@@ -846,7 +919,6 @@ function AnalisisNLPPage() {
                           analisisGuardados.length
                         ) * 100
                       : 0;
-
 
                   return (
 
