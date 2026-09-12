@@ -29,7 +29,8 @@ class ClasificacionRequest(BaseModel):
 class ClasificacionResponse(BaseModel):
     categoria: str
     confianza: float
-
+    sentimiento: str
+    prioridad: str
 
 class AnalisisNLPResponse(BaseModel):
     id: int
@@ -43,6 +44,9 @@ class AnalisisNLPResponse(BaseModel):
 
     categoria_detectada: str | None = None
     confianza: float | None = None
+
+    sentimiento: str | None = None
+    prioridad: str | None = None
 
     fecha_analisis: datetime | None = None
 

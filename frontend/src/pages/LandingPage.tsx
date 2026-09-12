@@ -87,7 +87,7 @@ function LandingPage() {
       <header className="landing-navbar">
 
         <div className="landing-brand">
-          EMPRESA
+          Centro Inteligente
         </div>
 
 
@@ -460,7 +460,7 @@ function LandingPage() {
       <footer className="landing-footer">
 
         <strong>
-          EMPRESA
+          Centro Inteligente
         </strong>
 
         <p>
@@ -468,7 +468,7 @@ function LandingPage() {
         </p>
 
         <p>
-          © 2026 EMPRESA
+          © 2026 Centro Inteligente
         </p>
 
       </footer>

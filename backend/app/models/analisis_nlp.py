@@ -63,6 +63,17 @@ class AnalisisNLP(Base):
         nullable=True
     )
 
+    # Nueva info para el análisis NLTK
+    sentimiento: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True
+    )
+
+    prioridad: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True
+    )
+
     fecha_analisis: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now()

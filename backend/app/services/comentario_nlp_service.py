@@ -43,6 +43,12 @@ async def procesar_comentario_nlp(
         ],
         confianza=resultado_clasificacion[
             "confianza"
+        ],
+        sentimiento=resultado_clasificacion[
+            "sentimiento"
+        ],
+        prioridad=resultado_clasificacion[
+            "prioridad"
         ]
     )
 

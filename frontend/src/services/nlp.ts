@@ -17,6 +17,8 @@ export interface AnalisisTexto {
 export interface Clasificacion {
   categoria: string;
   confianza: number;
+  sentimiento: string | null;
+  prioridad: string | null;
 }
 
 
@@ -39,6 +41,9 @@ export interface AnalisisNLP {
   confianza:
     | number
     | null;
+
+  sentimiento: string | null;
+  prioridad: string | null;
 
   fecha_analisis:
     | string
