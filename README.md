@@ -24,18 +24,17 @@
 
 ### 4. Escribir en la terminal este código, para entrar a la **carpeta frontend**
 
-
 ```bash
 `cd frontend`
 ```
 
-### 5. Dentro de la **carpeta frontend**, instalar los *node_modules* (esto suele tardar unos minutos)
+### 5. Dentro de la **carpeta frontend**, instalar los _node_modules_ (esto suele tardar unos minutos)
 
 ```bash
 `npm ci`
 ```
 
-### 6. Una vez instalado los *node_modules*, iniciar el servidor para interactuar con la página web
+### 6. Una vez instalado los _node_modules_, iniciar el servidor para interactuar con la página web
 
 ```bash
 `npm run dev`
@@ -126,3 +125,225 @@ No necesitas volver a crear el entorno virtual.
 
 Activa `.venv` e inicia FastAPI en una terminal.
 En otra terminal, entra a `frontend` y ejecuta `npm run dev`.
+
+# Estructura del proyecto (Última modificación: 1:56 AM - 15/09/2026)
+
+```
+empresa-inteligente
+├─ backend
+│  ├─ app
+│  │  ├─ api
+│  │  │  ├─ biometria.py
+│  │  │  ├─ clientes.py
+│  │  │  ├─ comentarios.py
+│  │  │  ├─ dashboard.py
+│  │  │  ├─ metricas.py
+│  │  │  ├─ nltk.py
+│  │  │  ├─ scipy.py
+│  │  │  ├─ tiempos_atencion.py
+│  │  │  └─ __init__.py
+│  │  ├─ core
+│  │  │  ├─ config.py
+│  │  │  └─ security.py
+│  │  ├─ database
+│  │  │  ├─ base.py
+│  │  │  ├─ connection.py
+│  │  │  ├─ models.py
+│  │  │  └─ __init__.py
+│  │  ├─ main.py
+│  │  ├─ models
+│  │  │  ├─ analisis_nlp.py
+│  │  │  ├─ cliente.py
+│  │  │  ├─ comentario.py
+│  │  │  ├─ optimizacion.py
+│  │  │  ├─ tiempo_atencion.py
+│  │  │  └─ __init__.py
+│  │  ├─ schemas
+│  │  │  ├─ biometria.py
+│  │  │  ├─ cliente.py
+│  │  │  ├─ comentario.py
+│  │  │  ├─ dashboard.py
+│  │  │  ├─ metrica.py
+│  │  │  ├─ nlp.py
+│  │  │  ├─ tiempo_atencion.py
+│  │  │  └─ __init__.py
+│  │  └─ services
+│  │     ├─ biometria_service.py
+│  │     ├─ comentario_nlp_service.py
+│  │     ├─ nltk_service.py
+│  │     ├─ scipy_service.py
+│  │     └─ __init__.py
+│  └─ requirements.txt
+├─ database
+│  ├─ 001_schema.sql
+│  └─ 002_seed.sql
+├─ docker-compose.yml
+├─ frontend
+│  ├─ eslint.config.js
+│  ├─ index.html
+│  ├─ package-lock.json
+│  ├─ package.json
+│  ├─ public
+│  │  ├─ favicon.svg
+│  │  └─ icons.svg
+│  ├─ README.md
+│  ├─ src
+│  │  ├─ App.css
+│  │  ├─ App.tsx
+│  │  ├─ assets
+│  │  │  ├─ hero.png
+│  │  │  ├─ react.svg
+│  │  │  └─ vite.svg
+│  │  ├─ components
+│  │  │  ├─ FaceLogin.tsx
+│  │  │  ├─ FaceRecognition.tsx
+│  │  │  ├─ Loading.tsx
+│  │  │  ├─ ProtectedRoute.tsx
+│  │  │  └─ Sidebar.tsx
+│  │  ├─ index.css
+│  │  ├─ layouts
+│  │  │  └─ DashboardLayout.tsx
+│  │  ├─ main.tsx
+│  │  ├─ pages
+│  │  │  ├─ AnalisisNLP.tsx
+│  │  │  ├─ Atencion.tsx
+│  │  │  ├─ Clientes.tsx
+│  │  │  ├─ Comentarios.tsx
+│  │  │  ├─ Configuracion.tsx
+│  │  │  ├─ Dashboard.tsx
+│  │  │  ├─ LandingPage.tsx
+│  │  │  ├─ Login.tsx
+│  │  │  ├─ Metricas.tsx
+│  │  │  ├─ Optimizacion.tsx
+│  │  │  └─ Reportes.tsx
+│  │  ├─ routes
+│  │  │  └─ AppRoutes.tsx
+│  │  └─ services
+│  │     ├─ api.ts
+│  │     ├─ biometria.ts
+│  │     ├─ clientes.ts
+│  │     ├─ comentarios.ts
+│  │     ├─ dashboard.ts
+│  │     ├─ facialRecognition.ts
+│  │     ├─ nlp.ts
+│  │     ├─ nltk.ts
+│  │     ├─ scipy.ts
+│  │     └─ tiempoAtencion.ts
+│  ├─ tsconfig.app.json
+│  ├─ tsconfig.json
+│  ├─ tsconfig.node.json
+│  ├─ vercel.json
+│  └─ vite.config.ts
+└─ README.md
+
+```
+
+```
+empresa-inteligente-Carlos
+├─ backend
+│  ├─ app
+│  │  ├─ api
+│  │  │  ├─ biometria.py
+│  │  │  ├─ clientes.py
+│  │  │  ├─ comentarios.py
+│  │  │  ├─ dashboard.py
+│  │  │  ├─ metricas.py
+│  │  │  ├─ nltk.py
+│  │  │  ├─ scipy.py
+│  │  │  ├─ tiempos_atencion.py
+│  │  │  └─ __init__.py
+│  │  ├─ core
+│  │  │  ├─ config.py
+│  │  │  └─ security.py
+│  │  ├─ database
+│  │  │  ├─ base.py
+│  │  │  ├─ connection.py
+│  │  │  ├─ models.py
+│  │  │  └─ __init__.py
+│  │  ├─ main.py
+│  │  ├─ models
+│  │  │  ├─ analisis_nlp.py
+│  │  │  ├─ cliente.py
+│  │  │  ├─ comentario.py
+│  │  │  ├─ optimizacion.py
+│  │  │  ├─ tiempo_atencion.py
+│  │  │  └─ __init__.py
+│  │  ├─ schemas
+│  │  │  ├─ biometria.py
+│  │  │  ├─ cliente.py
+│  │  │  ├─ comentario.py
+│  │  │  ├─ dashboard.py
+│  │  │  ├─ metrica.py
+│  │  │  ├─ nlp.py
+│  │  │  ├─ tiempo_atencion.py
+│  │  │  └─ __init__.py
+│  │  └─ services
+│  │     ├─ biometria_service.py
+│  │     ├─ comentario_nlp_service.py
+│  │     ├─ nltk_service.py
+│  │     ├─ scipy_service.py
+│  │     └─ __init__.py
+│  └─ requirements.txt
+├─ database
+│  ├─ 001_schema.sql
+│  └─ 002_seed.sql
+├─ docker-compose.yml
+├─ frontend
+│  ├─ eslint.config.js
+│  ├─ index.html
+│  ├─ package-lock.json
+│  ├─ package.json
+│  ├─ public
+│  │  ├─ favicon.svg
+│  │  └─ icons.svg
+│  ├─ README.md
+│  ├─ src
+│  │  ├─ App.css
+│  │  ├─ App.tsx
+│  │  ├─ assets
+│  │  │  ├─ hero.png
+│  │  │  ├─ react.svg
+│  │  │  └─ vite.svg
+│  │  ├─ components
+│  │  │  ├─ FaceLogin.tsx
+│  │  │  ├─ FaceRecognition.tsx
+│  │  │  ├─ Loading.tsx
+│  │  │  ├─ ProtectedRoute.tsx
+│  │  │  └─ Sidebar.tsx
+│  │  ├─ index.css
+│  │  ├─ layouts
+│  │  │  └─ DashboardLayout.tsx
+│  │  ├─ main.tsx
+│  │  ├─ pages
+│  │  │  ├─ AnalisisNLP.tsx
+│  │  │  ├─ Atencion.tsx
+│  │  │  ├─ Clientes.tsx
+│  │  │  ├─ Comentarios.tsx
+│  │  │  ├─ Configuracion.tsx
+│  │  │  ├─ Dashboard.tsx
+│  │  │  ├─ LandingPage.tsx
+│  │  │  ├─ Login.tsx
+│  │  │  ├─ Metricas.tsx
+│  │  │  ├─ Optimizacion.tsx
+│  │  │  └─ Reportes.tsx
+│  │  ├─ routes
+│  │  │  └─ AppRoutes.tsx
+│  │  └─ services
+│  │     ├─ api.ts
+│  │     ├─ biometria.ts
+│  │     ├─ clientes.ts
+│  │     ├─ comentarios.ts
+│  │     ├─ dashboard.ts
+│  │     ├─ facialRecognition.ts
+│  │     ├─ nlp.ts
+│  │     ├─ nltk.ts
+│  │     ├─ scipy.ts
+│  │     └─ tiempoAtencion.ts
+│  ├─ tsconfig.app.json
+│  ├─ tsconfig.json
+│  ├─ tsconfig.node.json
+│  ├─ vercel.json
+│  └─ vite.config.ts
+└─ README.md
+
+```

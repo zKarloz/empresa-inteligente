@@ -1,38 +1,15 @@
-from pydantic import BaseModel
+"""Validar la forma de los datos NO demuestra que provengan de una cámara real."""
+
+from typing import Annotated
+
+from pydantic import BaseModel, Field, FiniteFloat
+
+Embedding = Annotated[list[FiniteFloat], Field(min_length=1024, max_length=1024)]
 
 
 class BiometriaRegistro(BaseModel):
-    usuario_email: str
-    embeddings: list[list[float]]
+    embeddings: Annotated[list[Embedding], Field(min_length=5, max_length=5)]
 
-
-class BiometriaRegistroResponse(BaseModel):
-    id: int
-    usuario_email: str
-    cantidad_muestras: int
-    registrado: bool
-    mensaje: str
-
-
-class BiometriaEstadoResponse(BaseModel):
-    usuario_email: str
-    registrado: bool
-    cantidad_muestras: int
-    activo: bool
-
-
-# =========================================================
-# VERIFICACIÓN
-# =========================================================
 
 class BiometriaVerificacion(BaseModel):
-    usuario_email: str
-    embedding: list[float]
-
-
-class BiometriaVerificacionResponse(BaseModel):
-    verificado: bool
-    usuario_email: str
-    similitud: float
-    muestra_coincidente: int | None
-    mensaje: str
+    embedding: Embedding

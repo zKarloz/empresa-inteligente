@@ -1,99 +1,29 @@
-import {
-  apiFetch,
-} from "./api";
-
-
-export interface RegistroBiometriaResponse {
-  id: number;
-
-  usuario_email: string;
-
-  cantidad_muestras: number;
-
-  registrado: boolean;
-
-  mensaje: string;
-}
-
+import { apiFetch } from "./api";
 
 export interface EstadoBiometria {
-  usuario_email: string;
-
   registrado: boolean;
-
-  cantidad_muestras: number;
-
-  activo: boolean;
-}
-
-
-export async function registrarBiometria(
-  usuarioEmail: string,
-  embeddings: number[][]
-) {
-
-  return apiFetch<RegistroBiometriaResponse>(
-    "/api/biometria/registrar",
-    {
-      method: "POST",
-
-      body: JSON.stringify({
-        usuario_email:
-          usuarioEmail,
-
-        embeddings,
-      }),
-    }
-  );
-
-}
-
-
-export async function obtenerEstadoBiometria(
-  usuarioEmail: string
-) {
-
-  return apiFetch<EstadoBiometria>(
-    `/api/biometria/estado/${
-      encodeURIComponent(
-        usuarioEmail
-      )
-    }`
-  );
-
-}
-
-export interface VerificacionBiometriaResponse {
-  verificado: boolean;
-
   usuario_email: string;
-
-  similitud: number;
-
-  muestra_coincidente:
-    number | null;
-
-  mensaje: string;
+  cantidad_muestras: number;
 }
-
-
-export async function verificarBiometria(
-  usuarioEmail: string,
-  embedding: number[]
-) {
-
-  return apiFetch<VerificacionBiometriaResponse>(
-    "/api/biometria/verificar",
-    {
-      method: "POST",
-
-      body: JSON.stringify({
-        usuario_email:
-          usuarioEmail,
-
-        embedding,
-      }),
-    }
-  );
-
+export interface VerificacionBiometria {
+  verificado: boolean;
+  similitud: number;
+  coincidencias: number;
+  token: string | null;
+  usuario_email: string;
+}
+export const obtenerEstadoBiometria = () => apiFetch<EstadoBiometria>("/api/biometria/estado");
+export function registrarBiometria(embeddings: number[][]) {
+  return apiFetch<EstadoBiometria>("/api/biometria/registrar", {
+    method: "POST",
+    body: JSON.stringify({ embeddings }),
+  });
+}
+export function verificarBiometria(challenge: string, embedding: number[]) {
+  // El reto sirve únicamente para verificar el rostro; no es la sesión del dashboard.
+  return apiFetch<VerificacionBiometria>("/api/biometria/verificar", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${challenge}` },
+    body: JSON.stringify({ embedding }),
+  });
 }

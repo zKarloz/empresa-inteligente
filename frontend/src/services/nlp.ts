@@ -31,23 +31,23 @@ export interface AnalisisNLP {
   palabras_limpias: string[] | null;
 
   palabras_frecuentes:
-    | PalabraFrecuente[]
-    | null;
+  | PalabraFrecuente[]
+  | null;
 
   categoria_detectada:
-    | string
-    | null;
+  | string
+  | null;
 
   confianza:
-    | number
-    | null;
+  | number
+  | null;
 
   sentimiento: string | null;
   prioridad: string | null;
 
   fecha_analisis:
-    | string
-    | null;
+  | string
+  | null;
 }
 
 
