@@ -1,364 +1,80 @@
-import Human, {
-  type Config,
-} from "@vladmandic/human";
+import Human from "@vladmandic/human";
 
-
-// =========================================================
-// CONFIGURACIÓN
-// =========================================================
-
-const humanConfig: Partial<Config> = {
+// Modelo de identidad FaceRes, más controles experimentales de presencia.
+const human = new Human({
   backend: "webgl",
-
-  // Para empezar usamos los modelos oficiales remotamente.
-  // Más adelante podemos alojarlos dentro del proyecto.
-  modelBasePath:
-    "https://vladmandic.github.io/human-models/models/",
-
-  cacheSensitivity: 0.01,
+  modelBasePath: "https://vladmandic.github.io/human-models/models/",
+  cacheSensitivity: 0,
   cacheModels: true,
-
-  filter: {
-    enabled: true,
-    equalization: true,
-    flip: false,
-  },
-
+  filter: { enabled: true, equalization: true, flip: false },
   face: {
     enabled: true,
-
-    detector: {
-      rotation: true,
-      maxDetected: 2,
-      return: true,
-    },
-
-    mesh: {
-      enabled: true,
-    },
-
-    iris: {
-      enabled: true,
-    },
-
-    description: {
-      enabled: true,
-    },
-
-    emotion: {
-      enabled: false,
-    },
-
-    antispoof: {
-      enabled: true,
-    },
-
-    liveness: {
-      enabled: true,
-    },
+    detector: { rotation: true, maxDetected: 2, return: true, skipFrames: 0, skipTime: 0 },
+    mesh: { enabled: true },
+    iris: { enabled: false },
+    description: { enabled: true, skipFrames: 0, skipTime: 0 },
+    emotion: { enabled: false },
+    antispoof: { enabled: true, skipFrames: 0, skipTime: 0 },
+    liveness: { enabled: true, skipFrames: 0, skipTime: 0 },
   },
-
-  body: {
-    enabled: false,
-  },
-
-  hand: {
-    enabled: false,
-  },
-
-  object: {
-    enabled: false,
-  },
-
-  gesture: {
-    enabled: true,
-  },
-};
-
-
-export const human = new Human(humanConfig);
-
-
-// =========================================================
-// TIPOS
-// =========================================================
+  body: { enabled: false },
+  hand: { enabled: false },
+  object: { enabled: false },
+  gesture: { enabled: false },
+});
 
 export interface AnalisisFacial {
   valido: boolean;
-
   mensaje: string;
-
   confianza: number;
-
   real: number;
-
   live: number;
-
-  tamaño: number;
-
   embedding: number[] | null;
 }
 
-
-// =========================================================
-// ESTADO INTERNO
-// =========================================================
-
-let inicializado = false;
-
-
-// =========================================================
-// INICIALIZAR MODELOS
-// =========================================================
-
-export async function inicializarReconocimientoFacial() {
-
-  if (inicializado) {
-    return;
-  }
-
-  console.log(
-    "Cargando modelos de reconocimiento facial..."
-  );
-
-  await human.load();
-
-  console.log(
-    "Modelos cargados. Inicializando..."
-  );
-
-  await human.warmup();
-
-  inicializado = true;
-
-  console.log(
-    "Reconocimiento facial listo."
-  );
+// Compartir una promesa evita cargar los modelos dos veces bajo React StrictMode.
+let inicializacion: Promise<void> | null = null;
+export function inicializarReconocimientoFacial(): Promise<void> {
+  inicializacion ??= (async () => {
+    await human.load();
+    await human.warmup();
+  })().catch((error: unknown) => {
+    inicializacion = null;
+    throw error;
+  });
+  return inicializacion;
 }
 
-
-// =========================================================
-// ANALIZAR UN FRAME DE VIDEO
-// =========================================================
-
-export async function analizarRostro(
-  video: HTMLVideoElement
-): Promise<AnalisisFacial> {
-
-  const resultado =
-    await human.detect(video);
-
-
-  // =======================================================
-  // CANTIDAD DE ROSTROS
-  // =======================================================
-
-  if (resultado.face.length === 0) {
-
-    return {
-      valido: false,
-      mensaje: "No se detecta ningún rostro.",
-      confianza: 0,
-      real: 0,
-      live: 0,
-      tamaño: 0,
-      embedding: null,
-    };
-
-  }
-
-
-  if (resultado.face.length > 1) {
-
-    return {
-      valido: false,
-      mensaje:
-        "Debe aparecer solamente una persona en cámara.",
-      confianza: 0,
-      real: 0,
-      live: 0,
-      tamaño: 0,
-      embedding: null,
-    };
-
-  }
-
-
-  const rostro =
-    resultado.face[0];
-
-
-  // =======================================================
-  // MÉTRICAS
-  // =======================================================
-
-  const confianza =
-    rostro.faceScore ??
-    rostro.boxScore ??
-    0;
-
-
-  const real =
-    rostro.real ?? 0;
-
-
-  const live =
-    rostro.live ?? 0;
-
-
-  const tamaño =
-    Math.min(
-      rostro.box[2],
-      rostro.box[3]
-    );
-
-
-  const embedding =
-    rostro.embedding ?? null;
-
-
-  // =======================================================
-  // VALIDACIONES
-  // =======================================================
-
-  if (confianza < 0.6) {
-
-    return {
-      valido: false,
-      mensaje:
-        "Rostro poco claro. Mejora la iluminación.",
-      confianza,
-      real,
-      live,
-      tamaño,
-      embedding: null,
-    };
-
-  }
-
-
-  if (tamaño < 224) {
-
-    return {
-      valido: false,
-      mensaje:
-        "Acércate un poco más a la cámara.",
-      confianza,
-      real,
-      live,
-      tamaño,
-      embedding: null,
-    };
-
-  }
-
-
-  if (real < 0.6) {
-
-    return {
-      valido: false,
-      mensaje:
-        "No se pudo comprobar que sea un rostro real.",
-      confianza,
-      real,
-      live,
-      tamaño,
-      embedding: null,
-    };
-
-  }
-
-
-  if (live < 0.6) {
-
-    return {
-      valido: false,
-      mensaje:
-        "No se pudo confirmar presencia en vivo.",
-      confianza,
-      real,
-      live,
-      tamaño,
-      embedding: null,
-    };
-
-  }
-
-
-  if (!embedding || embedding.length === 0) {
-
-    return {
-      valido: false,
-      mensaje:
-        "No se pudo generar la huella facial.",
-      confianza,
-      real,
-      live,
-      tamaño,
-      embedding: null,
-    };
-
-  }
-
-
-  return {
-    valido: true,
-
-    mensaje:
-      "Rostro válido. Puedes capturar la muestra.",
-
-    confianza,
-    real,
-    live,
-    tamaño,
-    embedding,
-  };
+// Human es una instancia compartida: nunca ejecutar dos inferencias simultáneas.
+let cola: Promise<unknown> = Promise.resolve();
+export function analizarRostro(video: HTMLVideoElement): Promise<AnalisisFacial> {
+  const tarea = cola.then(() => analizar(video));
+  cola = tarea.catch(() => undefined);
+  return tarea;
 }
 
-
-// =========================================================
-// COMPARAR DOS ROSTROS
-// =========================================================
-
-export function compararRostros(
-  rostroRegistrado: number[],
-  rostroActual: number[]
-) {
-
-  return human.match.similarity(
-    rostroRegistrado,
-    rostroActual
-  );
-
-}
-
-
-// =========================================================
-// COMPARAR CONTRA VARIAS MUESTRAS
-// =========================================================
-
-export function buscarMejorCoincidencia(
-  muestrasRegistradas: number[][],
-  rostroActual: number[]
-) {
-
-  if (muestrasRegistradas.length === 0) {
-    return 0;
+async function analizar(video: HTMLVideoElement): Promise<AnalisisFacial> {
+  if (video.readyState < 2 || video.paused) throw new Error("La cámara no está lista");
+  const { face } = await human.detect(video);
+  const rostro = face.length === 1 ? face[0] : null;
+  const confianza = rostro?.faceScore ?? rostro?.boxScore ?? 0;
+  const real = rostro?.real ?? 0;
+  const live = rostro?.live ?? 0;
+  const embedding = rostro?.embedding;
+  let mensaje = "Rostro listo para capturar";
+  if (!rostro)
+    mensaje = face.length ? "Debe aparecer una sola persona" : "No se detecta un rostro";
+  else if (!Number.isFinite(confianza) || confianza < 0.6) mensaje = "Mejora la iluminación";
+  else if (Math.min(rostro.box[2], rostro.box[3]) < 224) mensaje = "Acércate un poco a la cámara";
+  else if (!Number.isFinite(real) || real < 0.6) {
+    // Diagnóstico temporal: esta puntuación no mide la coincidencia con tu identidad.
+    const puntuacion = Number.isFinite(real) ? real.toFixed(3) : "inválida";
+    mensaje = `No se pudo comprobar un rostro real. Antispoof: ${puntuacion}; mínimo: 0.600. Mira al frente con luz uniforme y evita el contraluz.`;
+  } else if (!Number.isFinite(live) || live < 0.6)
+    mensaje = `No se pudo confirmar presencia en vivo. Liveness: ${Number.isFinite(live) ? live.toFixed(3) : "inválida"}; mínimo: 0.600.`;
+  else if (!embedding || embedding.length !== 1024 || !embedding.every(Number.isFinite)) {
+    mensaje = "No se pudo generar el descriptor facial";
   }
-
-
-  const similitudes =
-    muestrasRegistradas.map(
-      (muestra) =>
-        compararRostros(
-          muestra,
-          rostroActual
-        )
-    );
-
-
-  return Math.max(
-    ...similitudes
-  );
-
+  const valido = mensaje === "Rostro listo para capturar";
+  return { valido, mensaje, confianza, real, live, embedding: valido ? [...embedding!] : null };
 }

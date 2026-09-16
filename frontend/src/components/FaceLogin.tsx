@@ -1,579 +1,90 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useRef, useState } from "react";
+import { Camera, CameraOff } from "lucide-react";
+import { useCamaraFacial } from "../hooks/useCamaraFacial";
+import { verificarBiometria } from "../services/biometria";
+import { ApiError } from "../services/api";
 
-import {
-  Camera,
-  ScanFace,
-  ShieldCheck,
-} from "lucide-react";
-
-import {
-  analizarRostro,
-  inicializarReconocimientoFacial,
-  type AnalisisFacial,
-} from "../services/facialRecognition";
-
-import {
-  verificarBiometria,
-} from "../services/biometria";
-
-
-interface FaceLoginProps {
-  onSuccess: () => void;
+interface Props {
+  challenge: string;
+  onSuccess: (token: string) => void;
 }
-
-
-function FaceLogin({
-  onSuccess,
-}: FaceLoginProps) {
-
-  const videoRef =
-    useRef<HTMLVideoElement | null>(null);
-
-  const streamRef =
-    useRef<MediaStream | null>(null);
-
-  const activoRef =
-    useRef(false);
-
-  const timerRef =
-    useRef<number | null>(null);
-
-
-  const [camaras, setCamaras] =
-    useState<MediaDeviceInfo[]>([]);
-
-  const [
-    camaraSeleccionada,
-    setCamaraSeleccionada,
-  ] = useState("");
-
-  const [analisis, setAnalisis] =
-    useState<AnalisisFacial | null>(null);
-
-  const [estado, setEstado] =
-    useState("Preparando modelos...");
-
-  const [modelosListos, setModelosListos] =
-    useState(false);
-
-  const [verificando, setVerificando] =
-    useState(false);
-
-  const [camaraActiva, setCamaraActiva] =
-    useState(false);
-
-  const [error, setError] =
-    useState<string | null>(null);
-
-
-  // =====================================================
-  // INICIALIZAR
-  // =====================================================
-
+export default function FaceLogin({ challenge, onSuccess }: Props) {
+  const camara = useCamaraFacial();
+  const bloqueo = useRef(false);
+  const vigente = useRef(false);
+  const [verificando, setVerificando] = useState(false);
+  const [agotado, setAgotado] = useState(false);
+  const [mensaje, setMensaje] = useState("");
   useEffect(() => {
-
-    async function iniciar() {
-
-      try {
-
-        await inicializarReconocimientoFacial();
-
-        setModelosListos(true);
-
-        setEstado(
-          "Selecciona una cámara."
-        );
-
-
-        const dispositivos =
-          await navigator.mediaDevices
-            .enumerateDevices();
-
-
-        const disponibles =
-          dispositivos.filter(
-            dispositivo =>
-              dispositivo.kind ===
-              "videoinput"
-          );
-
-
-        setCamaras(disponibles);
-
-
-        if (disponibles.length > 0) {
-
-          setCamaraSeleccionada(
-            disponibles[0].deviceId
-          );
-
-        }
-
-      } catch (err) {
-
-        console.error(err);
-
-        setError(
-          "No se pudieron cargar los modelos faciales."
-        );
-
-      }
-
-    }
-
-
-    iniciar();
-
-
+    vigente.current = true;
     return () => {
-
-      detenerCamara();
-
+      vigente.current = false;
     };
-
   }, []);
 
-
-  // =====================================================
-  // DETENER CÁMARA
-  // =====================================================
-
-  function detenerCamara() {
-
-    activoRef.current = false;
-
-
-    if (timerRef.current !== null) {
-
-      window.clearTimeout(
-        timerRef.current
-      );
-
-    }
-
-
-    streamRef.current
-      ?.getTracks()
-      .forEach(
-        track => track.stop()
-      );
-
-
-    streamRef.current = null;
-
-  }
-
-
-  // =====================================================
-  // INICIAR CÁMARA
-  // =====================================================
-
-  async function iniciarCamara() {
-
-    if (!modelosListos) {
-      return;
-    }
-
-
+  async function verificar() {
+    if (bloqueo.current || agotado) return;
+    bloqueo.current = true;
+    setVerificando(true);
+    setMensaje("");
     try {
-
-      setError(null);
-
-      detenerCamara();
-
-
-      const stream =
-        await navigator.mediaDevices
-          .getUserMedia({
-
-            video: camaraSeleccionada
-              ? {
-                  deviceId: {
-                    exact:
-                      camaraSeleccionada,
-                  },
-
-                  width: {
-                    ideal: 1280,
-                  },
-
-                  height: {
-                    ideal: 720,
-                  },
-                }
-              : true,
-
-            audio: false,
-
-          });
-
-
-      streamRef.current =
-        stream;
-
-
-      if (!videoRef.current) {
-        return;
-      }
-
-
-      videoRef.current.srcObject =
-        stream;
-
-
-      await videoRef.current.play();
-
-
-      activoRef.current = true;
-
-      setCamaraActiva(true);
-
-      setEstado(
-        "Colócate frente a la cámara."
-      );
-
-
-      analizarContinuamente();
-
-    } catch (err) {
-
-      console.error(err);
-
-      setError(
-        "No se pudo iniciar la cámara seleccionada."
-      );
-
-    }
-
-  }
-
-
-  // =====================================================
-  // ANALIZAR CONTINUAMENTE
-  // =====================================================
-
-  async function analizarContinuamente() {
-
-    if (!activoRef.current) {
-      return;
-    }
-
-
-    try {
-
-      const video =
-        videoRef.current;
-
-
-      if (
-        video &&
-        video.readyState >= 2
-      ) {
-
-        const resultado =
-          await analizarRostro(video);
-
-
-        if (!activoRef.current) {
-          return;
-        }
-
-
-        setAnalisis(resultado);
-
-        setEstado(
-          resultado.mensaje
-        );
-
-      }
-
-    } catch (err) {
-
-      console.error(
-        "Error analizando rostro:",
-        err
-      );
-
-    }
-
-
-    timerRef.current =
-      window.setTimeout(
-        analizarContinuamente,
-        400
-      );
-
-  }
-
-
-  // =====================================================
-  // VERIFICAR IDENTIDAD
-  // =====================================================
-
-  async function verificarIdentidad() {
-
-    if (
-      !analisis?.valido ||
-      !analisis.embedding
-    ) {
-
-      return;
-
-    }
-
-
-    try {
-
-      setVerificando(true);
-
-      setError(null);
-
-      setEstado(
-        "Comparando identidad..."
-      );
-
-
-      const respuesta =
-        await verificarBiometria(
-          "admin@empresa.com",
-          analisis.embedding
-        );
-
-
-      if (respuesta.verificado) {
-
-        setEstado(
-          `Administrador reconocido · ${(
-            respuesta.similitud * 100
-          ).toFixed(0)}%`
-        );
-
-
-        detenerCamara();
-
-
-        window.setTimeout(
-          () => {
-            onSuccess();
-          },
-          700
-        );
-
+      const embedding = await camara.capturar();
+      const resultado = await verificarBiometria(challenge, embedding);
+      if (!vigente.current) return;
+      if (resultado.verificado && resultado.token) {
+        camara.detener();
+        onSuccess(resultado.token);
       } else {
-
-        setEstado(
-          "Rostro no autorizado."
+        setMensaje(
+          `No coincide. Puntuación: ${resultado.similitud.toFixed(2)}; coincidencias: ${resultado.coincidencias}/5.`,
         );
-
-        setError(
-          `La identidad no coincide. Similitud: ${(
-            respuesta.similitud * 100
-          ).toFixed(0)}%`
-        );
-
       }
-
-    } catch (err) {
-
-      console.error(err);
-
-      setEstado(
-        "Error verificando identidad."
-      );
-
-      setError(
-        "No se pudo comprobar el rostro con el servidor."
-      );
-
+    } catch (e) {
+      if (!vigente.current) return;
+      if (e instanceof ApiError && [401, 429].includes(e.status)) setAgotado(true);
+      setMensaje(e instanceof Error ? e.message : "No se pudo verificar el rostro");
     } finally {
-
-      setVerificando(false);
-
+      bloqueo.current = false;
+      if (vigente.current) setVerificando(false);
     }
-
   }
-
-
   return (
-
     <div className="face-login">
-
-
-      {/* SELECTOR */}
-
+      <p>Contraseña comprobada. Ahora verifica tu rostro.</p>
       <div className="face-login-selector">
-
-        <select
-          value={camaraSeleccionada}
-          onChange={e =>
-            setCamaraSeleccionada(
-              e.target.value
-            )
-          }
-        >
-
-          {camaras.map(
-            (camara, index) => (
-
-              <option
-                key={camara.deviceId}
-                value={camara.deviceId}
-              >
-
-                {camara.label ||
-                  `Cámara ${index + 1}`}
-
-              </option>
-
-            )
-          )}
-
-        </select>
-
-
         <button
           type="button"
-          onClick={iniciarCamara}
-          disabled={!modelosListos}
           className="face-start-button"
+          disabled={camara.iniciando || verificando}
+          onClick={() => (camara.activa ? camara.detener() : void camara.iniciar())}
         >
-
-          <Camera size={15} />
-
-          Activar cámara
-
+          {camara.activa ? <CameraOff size={16} /> : <Camera size={16} />}
+          {camara.iniciando
+            ? "Preparando…"
+            : camara.activa
+              ? "Apagar cámara"
+              : "Activar cámara"}
         </button>
-
       </div>
-
-
-      {/* VIDEO */}
-
       <div className="face-login-camera">
-
-        <video
-          ref={videoRef}
-          muted
-          playsInline
-        />
-
-
-        {!camaraActiva && (
-
-          <div className="face-login-placeholder">
-
-            <ScanFace size={45} />
-
-            <span>
-              Cámara desactivada
-            </span>
-
-          </div>
-
-        )}
-
-
-        {camaraActiva && (
-
-          <div className="face-login-frame" />
-
-        )}
-
+        <video ref={camara.videoRef} muted playsInline />
       </div>
-
-
-      {/* ESTADO */}
-
-      <div
-        className={
-          analisis?.valido
-            ? "face-login-state valid"
-            : "face-login-state"
-        }
-      >
-
-        <ShieldCheck size={16} />
-
-        {estado}
-
-      </div>
-
-
-      {/* MÉTRICAS */}
-
-      {analisis && (
-
-        <div className="face-login-metrics">
-
-          <span>
-            Detección{" "}
-            <strong>
-              {(
-                analisis.confianza *
-                100
-              ).toFixed(0)}
-              %
-            </strong>
-          </span>
-
-          <span>
-            Real{" "}
-            <strong>
-              {(
-                analisis.real *
-                100
-              ).toFixed(0)}
-              %
-            </strong>
-          </span>
-
-          <span>
-            Liveness{" "}
-            <strong>
-              {(
-                analisis.live *
-                100
-              ).toFixed(0)}
-              %
-            </strong>
-          </span>
-
-        </div>
-
-      )}
-
-
-      {/* VERIFICAR */}
-
+      <p className="face-login-state">
+        {camara.analisis?.mensaje ?? "Activa la cámara para continuar"}
+      </p>
       <button
         type="button"
         className="login-button"
-        disabled={!analisis?.valido || verificando}
-        onClick={verificarIdentidad}
-        >
-        {verificando
-            ? "Verificando identidad..."
-            : "Verificar rostro"}
-        </button>
-
-
-      {error && (
-
-        <div className="login-error">
-          {error}
-        </div>
-
+        disabled={!camara.analisis?.valido || verificando || agotado}
+        onClick={() => void verificar()}
+      >
+        {verificando ? "Verificando…" : "Verificar rostro"}
+      </button>
+      {(mensaje || camara.error) && (
+        <p role="alert" className="login-error">
+          {mensaje || camara.error}
+        </p>
       )}
-
     </div>
-
   );
-
 }
-
-
-export default FaceLogin;

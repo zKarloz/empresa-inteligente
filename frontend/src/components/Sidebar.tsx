@@ -219,7 +219,7 @@ function Sidebar() {
           {grupoAbierto === "atencion" && (
             <div className="sidebar-submenu">
 
-               <Link to="/atencion#comentarios">
+              <Link to="/atencion#comentarios">
                 <MessageSquare size={13} />
                 Comentarios
               </Link>
@@ -504,7 +504,7 @@ function Sidebar() {
               }
             >
               {grupoAbierto ===
-              "configuracion" ? (
+                "configuracion" ? (
                 <ChevronDown size={16} />
               ) : (
                 <ChevronRight size={16} />
