@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { ApiError } from "../services/api";
+import GraficaInterpolacion from "../components/GraficaInterpolacion";
 import Loading from "../components/Loading";
 import {
   obtenerEstadisticas,
@@ -53,6 +54,8 @@ function Metricas() {
   const [xConocidos, setXConocidos] = useState("1, 3, 4, 6");
   const [yConocidos, setYConocidos] = useState("12000, 14500, 15000, 18000");
   const [xEstimar, setXEstimar] = useState("2, 5");
+
+  const [puntosConocidos, setPuntosConocidos] = useState<{ x: number; y: number }[]>([]);
 
   // OPTIMIZACIÓN
   const [nombreOptimizacion, setNombreOptimizacion] = useState("Optimización de recursos");
@@ -155,6 +158,8 @@ function Metricas() {
   // INTERPOLAR
   async function ejecutarInterpolacion(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
+    setResultadoInterpolacion(null);
+    setPuntosConocidos([]);
     try {
       setProcesando(true);
       setError(null);
@@ -167,6 +172,8 @@ function Metricas() {
         y_conocidos: y,
         x_estimar: estimar,
       });
+      // Guardar los puntos de ESTA petición junto a su respuesta.
+      setPuntosConocidos(x.map((valor, i) => ({ x: valor, y: y[i] })));
       setResultadoInterpolacion(resultado);
     } catch (error) {
       console.error(error);
@@ -325,8 +332,12 @@ function Metricas() {
               <label>Valores X conocidos</label>
               <input
                 type="text"
+                disabled={procesando}
                 value={xConocidos}
-                onChange={(evento) => setXConocidos(evento.target.value)}
+                onChange={(evento) => {
+                  setXConocidos(evento.target.value);
+                  setResultadoInterpolacion(null);
+                }}
                 placeholder="1, 3, 4, 6"
               />
             </div>
@@ -334,8 +345,12 @@ function Metricas() {
               <label>Valores Y conocidos</label>
               <input
                 type="text"
+                disabled={procesando}
                 value={yConocidos}
-                onChange={(evento) => setYConocidos(evento.target.value)}
+                onChange={(evento) => {
+                  setYConocidos(evento.target.value);
+                  setResultadoInterpolacion(null);
+                }}
                 placeholder="12000, 14500, 15000, 18000"
               />
             </div>
@@ -343,8 +358,12 @@ function Metricas() {
               <label>Valores X a estimar</label>
               <input
                 type="text"
+                disabled={procesando}
                 value={xEstimar}
-                onChange={(evento) => setXEstimar(evento.target.value)}
+                onChange={(evento) => {
+                  setXEstimar(evento.target.value);
+                  setResultadoInterpolacion(null);
+                }}
                 placeholder="2, 5"
               />
             </div>
@@ -358,6 +377,7 @@ function Metricas() {
         {resultadoInterpolacion && (
           <div className="scientific-result">
             <h3>Resultados estimados</h3>
+            <GraficaInterpolacion conocidos={puntosConocidos} estimados={resultadoInterpolacion.resultados} />
             <div className="scientific-grid">
               {resultadoInterpolacion.resultados.map((resultado) => (
                 <div className="scientific-card" key={resultado.x}>
