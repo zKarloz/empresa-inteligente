@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import {
+  useLocation,
   Routes,
   Route,
   Navigate,
@@ -17,7 +19,25 @@ import Reportes from "../pages/Reportes";
 import Configuracion from "../pages/Configuracion";
 import LandingPage from "../pages/LandingPage";
 
+const titulos: Record<string, string> = {
+  "/": "Consultas",
+  "/login": "Iniciar sesión",
+  "/dashboard": "Dashboard",
+  "/clientes": "Clientes",
+  "/atencion": "Atención",
+  "/nlp": "Inteligencia NLP",
+  "/metricas": "Métricas",
+  "/reportes": "Reportes",
+  "/configuracion": "Configuración",
+};
+
 function AppRoutes() {
+  const { pathname } = useLocation();
+  // Cambia la pestaña al navegar; no depende de parámetros ni del hash.
+  useEffect(() => {
+    const ruta = pathname.replace(/\/+$/, "") || "/";
+    document.title = `Centro Inteligente | ${titulos[ruta] ?? "Consultas"}`;
+  }, [pathname]);
   return (
     <Routes>
 

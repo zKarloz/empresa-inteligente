@@ -3206,3 +3206,154 @@ body {
   outline: 2px solid #a855f7;
   outline-offset: 3px;
 }
+
+/* Clientes: entrada y salida del formulario (200 ms). */
+.cliente-form-panel {
+  animation: cliente-form-entrada 200ms ease-out both;
+}
+
+.cliente-form-panel--cerrando {
+  animation: cliente-form-salida 200ms ease-in both;
+  pointer-events: none;
+}
+
+@keyframes cliente-form-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cliente-form-salida {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .cliente-form-panel,
+  .cliente-form-panel--cerrando {
+    animation: none;
+  }
+}
+
+/* Pantalla de verificación de sesión: estilos exclusivos de acceso. */
+.session-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  padding: 40px 24px;
+  background: radial-gradient(ellipse at top, #e8edff 0%, #f5f7fa 65%);
+  color: #172033;
+}
+
+.session-screen-content {
+  width: min(100%, 760px);
+  text-align: center;
+}
+
+.session-screen-brand {
+  margin: 0 0 40px;
+  color: #4f46e5;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.session-screen-icon {
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #dce2f7;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 12px 32px #3730a30d;
+}
+
+.session-screen-spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid #e0e7ff;
+  border-top-color: #4f46e5;
+  border-radius: 50%;
+  animation: session-screen-spin 900ms linear infinite;
+}
+
+.session-screen-icon--error {
+  color: #b45309;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.session-screen #session-title {
+  margin: 0;
+  font-size: clamp(32px, 6vw, 60px);
+  font-weight: 750;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.session-screen-description {
+  margin: 22px auto 0;
+  max-width: 520px;
+  color: #526078;
+  font-size: clamp(16px, 2vw, 19px);
+  line-height: 1.6;
+}
+
+.session-screen-note {
+  margin: 30px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.session-screen-retry {
+  margin-top: 28px;
+  padding: 12px 24px;
+  border: 0;
+  border-radius: 10px;
+  background: #4f46e5;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.session-screen-retry:hover {
+  background: #3730a3;
+}
+
+.session-screen-retry:focus-visible {
+  outline: 3px solid #818cf8;
+  outline-offset: 4px;
+}
+
+@keyframes session-screen-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .session-screen-spinner {
+    animation: none;
+  }
+}
