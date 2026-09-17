@@ -13,10 +13,10 @@ export interface VerificacionBiometria {
   usuario_email: string;
 }
 export const obtenerEstadoBiometria = () => apiFetch<EstadoBiometria>("/api/biometria/estado");
-export function registrarBiometria(embeddings: number[][]) {
+export function registrarBiometria(embeddings: number[][], passwordActual: string) {
   return apiFetch<EstadoBiometria>("/api/biometria/registrar", {
     method: "POST",
-    body: JSON.stringify({ embeddings }),
+    body: JSON.stringify({ embeddings, password_actual: passwordActual }),
   });
 }
 export function verificarBiometria(challenge: string, embedding: number[]) {

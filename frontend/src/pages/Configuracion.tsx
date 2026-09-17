@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserCircle, ShieldCheck, Mail, LogOut, Camera, CameraOff } from "lucide-react";
 import FaceRecognition from "../components/FaceRecognition";
+import GestionUsuarios from "../components/GestionUsuarios";
+import CambiarPassword from "../components/CambiarPassword";
 import { registrarBiometria, obtenerEstadoBiometria } from "../services/biometria";
 import { cerrarSesion as revocarSesion, obtenerUsuario, type Usuario } from "../services/auth";
 import { ApiError } from "../services/api";
@@ -11,6 +13,7 @@ function Configuracion() {
   const [camaraRegistroActiva, setCamaraRegistroActiva] = useState(false);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [registrado, setRegistrado] = useState(false);
+  const [passwordBiometria, setPasswordBiometria] = useState("");
   const [mensaje, setMensaje] = useState("");
   const usuarioActual = {
     nombre: usuario?.nombre ?? "Cargando…",
@@ -48,7 +51,7 @@ function Configuracion() {
         block: "start",
       });
     }
-  }, [location.hash]);
+  }, [location.hash, usuario]);
   // CERRAR SESIÓN
   async function cerrarSesion() {
     try {
@@ -121,8 +124,25 @@ function Configuracion() {
         <div className="panel-header">
           <div>
             <h2>Registrar rostro</h2>
-            <p>Configuración biométrica del administrador.</p>
+            <p>Registro facial personal de {usuarioActual.nombre}.</p>
           </div>
+        </div>
+        <div className="form-group">
+          <label htmlFor="password-biometria">
+            Tu contraseña actual para guardar el rostro
+          </label>
+          <input
+            id="password-biometria"
+            type="password"
+            autoComplete="current-password"
+            maxLength={256}
+            value={passwordBiometria}
+            onChange={(e) => setPasswordBiometria(e.target.value)}
+          />
+          <p>
+            Guardar reemplaza únicamente las muestras de tu cuenta. Introduce tu
+            contraseña antes de pulsar Guardar rostro.
+          </p>
         </div>
         <div className="form-actions">
           {!camaraRegistroActiva ? (
@@ -148,7 +168,12 @@ function Configuracion() {
         {camaraRegistroActiva ? (
           <FaceRecognition
             onRegistroCompleto={async (embeddings) => {
-              await registrarBiometria(embeddings);
+              if (!passwordBiometria)
+                throw new Error(
+                  "Introduce tu contraseña actual para guardar el rostro",
+                );
+              await registrarBiometria(embeddings, passwordBiometria);
+              setPasswordBiometria("");
               setRegistrado(true);
               setMensaje("Biometría guardada correctamente");
             }}
@@ -160,18 +185,9 @@ function Configuracion() {
           </p>
         )}
       </section>
-      {/* USUARIOS */}
-      <section id="usuarios" className="dashboard-panel">
-        <div className="panel-header">
-          <div>
-            <h2>Usuarios</h2>
-            <p>Administración de usuarios y roles del sistema</p>
-          </div>
-        </div>
-        <p>
-          Próximamente podrás administrar usuarios, roles y permisos desde esta sección.
-        </p>
-      </section>
+      <CambiarPassword />
+      {/* La API también comprueba el rol; ocultar el panel no es la protección. */}
+      {usuario?.rol === "Administrador" && <GestionUsuarios />}
       {/* CATEGORÍAS */}
       <section id="categorias-config" className="dashboard-panel">
         <div className="panel-header">

@@ -16,8 +16,8 @@ def required(name: str) -> str:
     return value
 
 
-ADMIN_EMAIL = required("ADMIN_EMAIL").lower()
-ADMIN_PASSWORD_HASH = required("ADMIN_PASSWORD_HASH")
+# Las credenciales del .env solo se usan en el script de migración inicial.
+# Después, cada cuenta se autentica contra su hash guardado en la base de datos.
 SESSION_SECONDS = 8 * 60 * 60
 CHALLENGE_SECONDS = 2 * 60
 MAX_FACE_ATTEMPTS = 5

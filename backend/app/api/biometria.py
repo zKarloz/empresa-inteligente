@@ -1,7 +1,13 @@
 """Registro autenticado y comparación facial posterior a la contraseña."""
 
-from app.core.config import ADMIN_EMAIL, FACE_THRESHOLD, MAX_FACE_ATTEMPTS
-from app.core.security import bearer, issue_token, require_session, token_hash
+from app.core.config import FACE_THRESHOLD, MAX_FACE_ATTEMPTS
+from app.core.security import (
+    bearer,
+    check_current_password,
+    issue_token,
+    require_session,
+    token_hash,
+)
 from app.database.connection import get_db
 from app.schemas.biometria import BiometriaRegistro, BiometriaVerificacion
 from app.services.biometria_service import (
@@ -23,7 +29,13 @@ async def registrar(
     email: str = Depends(require_session),
 ):
     # La identidad viene de la sesión, nunca de un correo elegido por el navegador.
-    contenido = cifrar_embeddings(datos.embeddings)
+    await check_current_password(db, email, datos.password_actual, "registro-facial")
+    try:
+        contenido = cifrar_embeddings(datos.embeddings)
+    except (ValueError, RuntimeError):
+        raise HTTPException(
+            503, "El servidor no tiene una clave biométrica válida. Contacta al administrador"
+        )
     await db.execute(
         text("""
         INSERT INTO biometria_facial
@@ -64,8 +76,23 @@ async def estado(db: AsyncSession = Depends(get_db), email: str = Depends(requir
 async def verificar(
     datos: BiometriaVerificacion, request: Request, db: AsyncSession = Depends(get_db)
 ):
-    # Bloqueo de fila: dos peticiones simultáneas no pueden consumir el mismo reto.
     hashed = token_hash(bearer(request))
+    # Primero bloquear la cuenta, igual que al cambiar contraseña o desactivarla.
+    email = (
+        await db.execute(
+            text("""
+        SELECT u.usuario_email FROM app_usuarios u
+        JOIN auth_sessions s ON s.usuario_email = u.usuario_email
+        WHERE s.token_hash = :hash AND s.purpose = 'face_challenge' AND s.expires_at > NOW()
+          AND u.activo = TRUE AND s.usuario_version = u.session_version
+        FOR UPDATE OF u
+    """),
+            {"hash": hashed},
+        )
+    ).scalar_one_or_none()
+    if not email:
+        raise HTTPException(401, "El permiso facial venció o la cuenta no está disponible")
+    # Consumir el reto una sola vez, incluso si llegan dos peticiones juntas.
     challenge = (
         (
             await db.execute(
@@ -80,8 +107,8 @@ async def verificar(
         .mappings()
         .first()
     )
-    if not challenge or challenge["usuario_email"] != ADMIN_EMAIL:
-        raise HTTPException(401, "El permiso facial venció. Vuelve a ingresar tu contraseña")
+    if not challenge:
+        raise HTTPException(401, "Vuelve a ingresar tu contraseña")
     if challenge["attempts"] >= MAX_FACE_ATTEMPTS:
         raise HTTPException(429, "Se agotaron los intentos. Vuelve a ingresar tu contraseña")
     await db.execute(
@@ -95,7 +122,7 @@ async def verificar(
         SELECT embeddings_encrypted FROM biometria_facial
         WHERE usuario_email = :email AND activo = TRUE
     """),
-                {"email": ADMIN_EMAIL},
+                {"email": email},
             )
         )
         .mappings()
@@ -117,12 +144,12 @@ async def verificar(
         await db.execute(
             text("DELETE FROM auth_sessions WHERE token_hash = :hash"), {"hash": hashed}
         )
-        token = await issue_token(db, ADMIN_EMAIL, "session")
+        token = await issue_token(db, email, "session")
     await db.commit()
     return {
         "verificado": verified,
         "similitud": score,
         "coincidencias": matches,
         "token": token,
-        "usuario_email": ADMIN_EMAIL,
+        "usuario_email": email,
     }
