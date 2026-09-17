@@ -112,7 +112,7 @@ function Login() {
                     type="email"
                     value={email}
                     onChange={(evento) => setEmail(evento.target.value)}
-                    placeholder="admin@empresa.com"
+                    placeholder="tu.correo@empresa.com"
                     autoComplete="email"
                     required
                   />
