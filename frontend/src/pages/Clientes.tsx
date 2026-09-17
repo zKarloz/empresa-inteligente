@@ -34,9 +34,23 @@ function Clientes() {
   const [formulario, setFormulario] = useState<ClienteCreate>(formularioInicial);
   const [clienteEditando, setClienteEditando] = useState<number | null>(null);
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [cerrandoFormulario, setCerrandoFormulario] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Mantener el panel montado durante la animación de salida.
+  useEffect(() => {
+    if (!cerrandoFormulario) return;
+    const demora = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 200;
+    const temporizador = window.setTimeout(() => {
+      setMostrarFormulario(false);
+      setCerrandoFormulario(false);
+      setFormulario(formularioInicial);
+      setClienteEditando(null);
+    }, demora);
+    return () => window.clearTimeout(temporizador);
+  }, [cerrandoFormulario]);
 
   // CARGAR CLIENTES
   async function cargarClientes() {
@@ -90,6 +104,7 @@ function Clientes() {
 
   // EDITAR CLIENTE
   function editarCliente(cliente: Cliente) {
+    setCerrandoFormulario(false);
     setFormulario({
       nombre: cliente.nombre,
       email: cliente.email ?? "",
@@ -104,18 +119,21 @@ function Clientes() {
 
   // CANCELAR FORMULARIO
   function reiniciarFormulario(mostrar: boolean) {
+    setCerrandoFormulario(false);
     setFormulario(formularioInicial);
     setClienteEditando(null);
     setMostrarFormulario(mostrar);
     setError(null);
   }
   function cancelarFormulario() {
-    reiniciarFormulario(false);
+    setError(null);
+    setCerrandoFormulario(true);
   }
 
   // GUARDAR CLIENTE
   async function guardarCliente(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
+    if (guardando || cerrandoFormulario) return;
     if (!formulario.nombre.trim()) {
       setError("El nombre del cliente es obligatorio");
       return;
@@ -136,9 +154,7 @@ function Clientes() {
         await crearCliente(datos);
       }
       await cargarClientes();
-      setFormulario(formularioInicial);
-      setClienteEditando(null);
-      setMostrarFormulario(false);
+      setCerrandoFormulario(true);
     } catch (error) {
       console.error("Error al guardar cliente:", error);
       setError("No se pudo guardar el cliente");
@@ -171,7 +187,7 @@ function Clientes() {
           <h1>Clientes</h1>
           <p>Gestión de clientes registrados en el sistema</p>
         </div>
-        <button type="button" className="primary-button" onClick={abrirNuevoCliente}>
+        <button type="button" className="primary-button" disabled={guardando} onClick={abrirNuevoCliente}>
           + Nuevo cliente
         </button>
       </header>
@@ -179,7 +195,9 @@ function Clientes() {
       {error && <div className="message-error">{error}</div>}
       {/* FORMULARIO */}
       {mostrarFormulario && (
-        <section id="nuevo-cliente" className="dashboard-panel">
+        <section id="nuevo-cliente"
+          className={`dashboard-panel cliente-form-panel${cerrandoFormulario ? " cliente-form-panel--cerrando" : ""}`}
+          inert={cerrandoFormulario}>
           <div className="panel-header">
             <div>
               <h2>{clienteEditando !== null ? "Editar cliente" : "Nuevo cliente"}</h2>
@@ -215,11 +233,12 @@ function Clientes() {
               <button
                 type="button"
                 className="secondary-button"
+                disabled={guardando || cerrandoFormulario}
                 onClick={cancelarFormulario}
               >
                 Cancelar
               </button>
-              <button type="submit" className="primary-button" disabled={guardando}>
+              <button type="submit" className="primary-button" disabled={guardando || cerrandoFormulario}>
                 {guardando
                   ? "Guardando..."
                   : clienteEditando !== null
@@ -286,6 +305,7 @@ function Clientes() {
                         <button
                           type="button"
                           className="edit-button"
+                          disabled={guardando}
                           onClick={() => editarCliente(cliente)}
                         >
                           Editar

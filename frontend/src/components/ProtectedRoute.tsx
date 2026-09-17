@@ -35,24 +35,41 @@ export default function ProtectedRoute() {
     };
   }, [intento]);
 
-  if (estado === "cargando") {
-    return <p role="status">Comprobando sesión…</p>;
-  }
-
   if (estado === "invalido") {
     return <Navigate to="/login" replace />;
   }
 
-  if (estado === "error") {
+  // La pantalla dura únicamente lo que tarde la comprobación real.
+  if (estado === "cargando" || estado === "error") {
+    const hayError = estado === "error";
     return (
-      <div role="alert">
-        <p>No se pudo conectar con el servidor.</p>
-        <button type="button" onClick={() => {
-          setEstado("cargando");
-          setIntento((actual) => actual + 1);
-        }}
-        >Reintentar</button>
-      </div>
+      <main className="session-screen">
+        <section className="session-screen-content" aria-labelledby="session-title">
+          <p className="session-screen-brand">Centro Inteligente</p>
+          <div className={hayError ? "session-screen-icon session-screen-icon--error" : "session-screen-icon"}
+            aria-hidden="true">
+            {hayError ? "!" : <span className="session-screen-spinner" />}
+          </div>
+          <div role={hayError ? "alert" : "status"} aria-atomic="true">
+            <h1 id="session-title">
+              {hayError ? "No pudimos verificar tu sesión" : "Verificando tu sesión"}
+            </h1>
+            <p className="session-screen-description">
+              {hayError
+                ? "No se pudo conectar con el servidor. Inténtalo nuevamente."
+                : "Estamos preparando tu acceso al dashboard."}
+            </p>
+          </div>
+          {hayError ? (
+            <button type="button" className="session-screen-retry" onClick={() => {
+              setEstado("cargando");
+              setIntento((actual) => actual + 1);
+            }}>Reintentar</button>
+          ) : (
+            <p className="session-screen-note">Un momento, por favor.</p>
+          )}
+        </section>
+      </main>
     );
   }
 
