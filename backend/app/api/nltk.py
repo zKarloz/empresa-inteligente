@@ -66,7 +66,7 @@ async def clasificar_comentario(
 @router.post(
     "/comentarios/{comentario_id}/analizar",
     response_model=AnalisisNLPResponse,
-    status_code=201
+    status_code=200
 )
 async def analizar_comentario_guardado(
     comentario_id: int,
@@ -93,27 +93,7 @@ async def analizar_comentario_guardado(
         )
 
 
-    # Comprobar si ya fue analizado
-    resultado_analisis = await db.execute(
-        select(AnalisisNLP).where(
-            AnalisisNLP.comentario_id
-            == comentario_id
-        )
-    )
-
-    analisis_existente = (
-        resultado_analisis.scalar_one_or_none()
-    )
-
-
-    if analisis_existente is not None:
-
-        raise HTTPException(
-            status_code=409,
-            detail="El comentario ya fue analizado"
-        )
-
-
+    # El servicio actualiza el análisis existente o crea el primero.
     return await procesar_comentario_nlp(
         comentario,
         db

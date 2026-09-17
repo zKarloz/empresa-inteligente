@@ -1,364 +1,121 @@
+"""Clasificación supervisada básica. Mantiene el contrato del dashboard."""
+import re
+import unicodedata
 from collections import Counter
+from functools import lru_cache
 
 from nltk import NaiveBayesClassifier
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
+
+from .datos_nlp import DATOS_ENTRENAMIENTO, DATOS_SENTIMIENTO
+
+# Lista pequeña y explícita: no elimina negaciones. No requiere descargar corpus.
+IGNORADAS = set('el la los las un una unos unas de del al a en por para con y o que '
+                'es son fue fueron ser estoy esta este mi mis su sus se me lo muy '
+                'he ha han haber'.split())
+NEGACIONES = {'no', 'nunca', 'jamás', 'sin'}
+CORTES = {'.', ',', ';', ':', '!', '?', 'pero', 'aunque', 'sino'}
 
 
-
-# LIMPIEZA Y TOKENIZACIÓN
+def tokenizar(texto: str) -> list[str]:
+    return re.findall(r'[^\W\d_]+|[.,;:!?]', unicodedata.normalize('NFC', texto.lower()))
 
 
 def limpiar_texto(texto: str) -> list[str]:
-    texto = texto.lower()
-
-    tokens = word_tokenize(
-        texto,
-        language="spanish"
-    )
-
-    palabras_ignoradas = set(
-        stopwords.words("spanish")
-    )
-
-    palabras_limpias = [
-        token
-        for token in tokens
-        if token.isalpha()
-        and token not in palabras_ignoradas
-    ]
-
-    return palabras_limpias
-
-
-
-# ANÁLISIS GENERAL
+    """Palabras para estadísticas; conserva su escritura y las negaciones."""
+    return [p for p in tokenizar(texto) if p.isalpha() and p not in IGNORADAS]
 
 
 def analizar_texto(texto: str) -> dict:
-    palabras_limpias = limpiar_texto(texto)
-
-    contador = Counter(palabras_limpias)
-
-    palabras_frecuentes = [
-        {
-            "palabra": palabra,
-            "frecuencia": frecuencia
-        }
-        for palabra, frecuencia
-        in contador.most_common(10)
-    ]
-
+    palabras = limpiar_texto(texto)
     return {
-        "cantidad_palabras": len(palabras_limpias),
-        "tokens": palabras_limpias,
-        "palabras_frecuentes": palabras_frecuentes
+        'cantidad_palabras': len(palabras),
+        'tokens': palabras,
+        'palabras_frecuentes': [
+            {'palabra': p, 'frecuencia': n} for p, n in Counter(palabras).most_common(10)
+        ],
     }
 
 
-
-# DATOS DE ENTRENAMIENTO (Conjunto de ejemplos para entrenar el clasificador de texto)
-
-
-DATOS_ENTRENAMIENTO = [
-    # VENTAS
-    (
-        "Quiero conocer el precio del producto",
-        "VENTAS"
-    ),
-    (
-        "Deseo comprar uno de sus servicios",
-        "VENTAS"
-    ),
-    (
-        "Necesito información sobre precios y promociones",
-        "VENTAS"
-    ),
-    (
-        "Quisiera contratar el servicio",
-        "VENTAS"
-    ),
-
-    # SOPORTE
-    (
-        "Necesito ayuda con el servicio",
-        "SOPORTE"
-    ),
-    (
-        "Tengo un problema técnico",
-        "SOPORTE"
-    ),
-    (
-        "El sistema no funciona correctamente",
-        "SOPORTE"
-    ),
-    (
-        "Necesito soporte para solucionar un error",
-        "SOPORTE"
-    ),
-
-    # RECLAMO
-    (
-        "La atención demoró demasiado",
-        "RECLAMO"
-    ),
-    (
-        "Estoy inconforme con el servicio",
-        "RECLAMO"
-    ),
-    (
-        "No solucionaron mi problema",
-        "RECLAMO"
-    ),
-    (
-        "El servicio fue muy malo",
-        "RECLAMO"
-    ),
-
-    # CONSULTA
-    (
-        "Cuál es el horario de atención",
-        "CONSULTA"
-    ),
-    (
-        "Dónde se encuentra la empresa",
-        "CONSULTA"
-    ),
-    (
-        "Quisiera obtener más información",
-        "CONSULTA"
-    ),
-    (
-        "Tengo una consulta sobre sus servicios",
-        "CONSULTA"
-    ),
-
-    # FELICITACION
-    (
-        "La atención fue excelente",
-        "FELICITACION"
-    ),
-    (
-        "El servicio fue muy rápido",
-        "FELICITACION"
-    ),
-    (
-        "Estoy muy satisfecho con la atención",
-        "FELICITACION"
-    ),
-    (
-        "Excelente trabajo del equipo",
-        "FELICITACION"
-    ),
-
-    # OTROS
-    (
-        "Gracias por la información",
-        "OTROS"
-    ),
-    (
-        "Buen día",
-        "OTROS"
-    ),
-    (
-        "Saludos a todo el equipo",
-        "OTROS"
-    ),
-    (
-        "Mensaje general para la empresa",
-        "OTROS"
-    )
-]
-
-DATOS_SENTIMIENTO = [
-    # POSITIVO
-    ("La atención fue excelente", "POSITIVO"),
-    ("Estoy muy satisfecho con el servicio", "POSITIVO"),
-    ("Muchas gracias por la ayuda", "POSITIVO"),
-    ("El equipo hizo un buen trabajo", "POSITIVO"),
-    ("El servicio fue rápido y eficiente", "POSITIVO"),
-    ("Me atendieron muy bien", "POSITIVO"),
-
-    # NEGATIVO
-    ("La atención fue pésima", "NEGATIVO"),
-    ("Estoy molesto con el servicio", "NEGATIVO"),
-    ("No solucionaron mi problema", "NEGATIVO"),
-    ("El sistema funciona muy mal", "NEGATIVO"),
-    ("Demoraron demasiado en atenderme", "NEGATIVO"),
-    ("Estoy inconforme con la atención", "NEGATIVO"),
-
-    # NEUTRAL
-    ("Quiero conocer el horario de atención", "NEUTRAL"),
-    ("Necesito información sobre sus servicios", "NEUTRAL"),
-    ("Cuál es el precio del producto", "NEUTRAL"),
-    ("Deseo comunicarme con la empresa", "NEUTRAL"),
-    ("Quisiera realizar una consulta", "NEUTRAL"),
-    ("Dónde se encuentra su oficina", "NEUTRAL"),
-]
-
-# CARACTERÍSTICAS PARA NLTK
+def extraer_caracteristicas(palabras: list[str]) -> dict:
+    # Aproximación de negación: afecta a las próximas 3 palabras útiles.
+    # La puntuación y conectores cortan su alcance; no resuelve toda la gramática.
+    rasgos = {}
+    restantes = 0
+    anterior = None
+    for palabra in palabras:
+        if palabra in CORTES:
+            restantes, anterior = 0, None
+            continue
+        if palabra in NEGACIONES:
+            restantes, anterior = 3, None
+            continue
+        if palabra in IGNORADAS:
+            continue
+        actual = f'NEG_{palabra}' if restantes else palabra
+        rasgos[f'palabra:{actual}'] = True
+        if anterior:
+            rasgos[f'par:{anterior}|{actual}'] = True
+        anterior = actual
+        restantes = max(0, restantes - 1)
+    return rasgos
 
 
-def extraer_caracteristicas(
-    palabras: list[str]
-) -> dict:
-    return {
-        palabra: True
-        for palabra in palabras
-    }
+def entrenar_clasificador(datos=DATOS_ENTRENAMIENTO):
+    ejemplos = [(extraer_caracteristicas(tokenizar(texto)), etiqueta)
+                for texto, etiqueta in datos]
+    vocabulario = {rasgo for rasgos, _ in ejemplos for rasgo in rasgos}
+    return NaiveBayesClassifier.train(ejemplos), vocabulario
 
-
-
-# ENTRENAR CLASIFICADOR
-
-
-def entrenar_clasificador():
-    entrenamiento = []
-
-    for texto, categoria in DATOS_ENTRENAMIENTO:
-        palabras = limpiar_texto(texto)
-
-        caracteristicas = extraer_caracteristicas(
-            palabras
-        )
-
-        entrenamiento.append(
-            (caracteristicas, categoria)
-        )
-
-    return NaiveBayesClassifier.train(
-        entrenamiento
-    )
-
-
-CLASIFICADOR = entrenar_clasificador()
 
 def entrenar_clasificador_sentimiento():
-    entrenamiento = []
-
-    for texto, sentimiento in DATOS_SENTIMIENTO:
-        palabras = limpiar_texto(texto)
-
-        caracteristicas = extraer_caracteristicas(
-            palabras
-        )
-
-        entrenamiento.append(
-            (caracteristicas, sentimiento)
-        )
-
-    return NaiveBayesClassifier.train(
-        entrenamiento
-    )
+    return entrenar_clasificador(DATOS_SENTIMIENTO)
 
 
-CLASIFICADOR_SENTIMIENTO = (
-    entrenar_clasificador_sentimiento()
-)
+@lru_cache(maxsize=1)
+def obtener_modelos():
+    # Se entrenan una vez por proceso, al primer análisis, con las listas locales.
+    return entrenar_clasificador(), entrenar_clasificador_sentimiento()
+
+
+def predecir(modelo, caracteristicas, alternativa):
+    # NLTK ignora rasgos desconocidos. Evitamos decidir solo por probabilidades previas.
+    clasificador, vocabulario = modelo
+    conocidos = {k: v for k, v in caracteristicas.items() if k in vocabulario}
+    if not conocidos:
+        return alternativa, 0.0
+    distribucion = clasificador.prob_classify(conocidos)
+    etiqueta = distribucion.max()
+    return etiqueta, float(distribucion.prob(etiqueta))
 
 
 def clasificar_sentimiento(texto: str) -> str:
-    palabras = limpiar_texto(texto)
-
-    caracteristicas = extraer_caracteristicas(
-        palabras
-    )
-
-    return CLASIFICADOR_SENTIMIENTO.classify(
-        caracteristicas
-    )
+    _, modelo = obtener_modelos()
+    return predecir(modelo, extraer_caracteristicas(tokenizar(texto)), 'NEUTRAL')[0]
 
 
-def determinar_prioridad(
-    texto: str,
-    categoria: str
-) -> str:
-    texto_normalizado = texto.lower()
-
-    indicadores_alta = [
-        "urgente",
-        "inmediatamente",
-        "no funciona",
-        "no puedo acceder",
-        "caído",
-        "caida",
-        "caída",
-        "pésimo",
-        "pesimo",
-        "fraude",
-        "reembolso",
-        "cancelar",
-        "demoró demasiado",
-    ]
-
-    indicadores_media = [
-        "problema",
-        "error",
-        "ayuda",
-        "soporte",
-        "demora",
-        "cotización",
-        "cotizacion",
-        "contratar",
-        "precio",
-    ]
-
-    if (
-        categoria == "RECLAMO"
-        or any(
-            indicador in texto_normalizado
-            for indicador in indicadores_alta
-        )
-    ):
-        return "ALTA"
-
-    if (
-        categoria in {
-            "SOPORTE",
-            "VENTAS",
-            "CONSULTA",
-        }
-        or any(
-            indicador in texto_normalizado
-            for indicador in indicadores_media
-        )
-    ):
-        return "MEDIA"
-
-    return "BAJA"
-
-# CLASIFICAR TEXTO
+def determinar_prioridad(texto: str, categoria: str) -> str:
+    # Reglas de negocio conservadas: prioridad no es otro modelo entrenado.
+    texto = texto.lower()
+    altas = ('urgente', 'inmediatamente', 'no funciona', 'no puedo acceder', 'caído',
+             'caida', 'caída', 'pésimo', 'pesimo', 'fraude', 'reembolso', 'cancelar',
+             'demoró demasiado')
+    medias = ('problema', 'error', 'ayuda', 'soporte', 'demora', 'cotización',
+              'cotizacion', 'contratar', 'precio')
+    if categoria == 'RECLAMO' or any(p in texto for p in altas):
+        return 'ALTA'
+    if categoria in {'SOPORTE', 'VENTAS', 'CONSULTA'} or any(p in texto for p in medias):
+        return 'MEDIA'
+    return 'BAJA'
 
 
 def clasificar_texto(texto: str) -> dict:
-    palabras = limpiar_texto(texto)
-
-    caracteristicas = extraer_caracteristicas(
-        palabras
-    )
-
-    distribucion = CLASIFICADOR.prob_classify(
-        caracteristicas
-    )
-
-    categoria = distribucion.max()
-
-    confianza = distribucion.prob(
-        categoria
-    )
-
-    sentimiento = clasificar_sentimiento(
-        texto
-    )
-
-    prioridad = determinar_prioridad(
-        texto,
-        categoria
-    )
-
+    modelo, sentimiento_modelo = obtener_modelos()
+    rasgos = extraer_caracteristicas(tokenizar(texto))
+    categoria, confianza = predecir(modelo, rasgos, 'OTROS')
+    sentimiento, _ = predecir(sentimiento_modelo, rasgos, 'NEUTRAL')
     return {
-        "categoria": categoria,
-        "confianza": float(confianza),
-        "sentimiento": sentimiento,
-        "prioridad": prioridad,
+        'categoria': categoria,
+        'confianza': confianza,  # Probabilidad de categoría, no precisión medida.
+        'sentimiento': sentimiento,
+        'prioridad': determinar_prioridad(texto, categoria),
     }

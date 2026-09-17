@@ -26,6 +26,8 @@ function AnalisisNLPPage() {
   const [comentarioProcesando, setComentarioProcesando] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [comentarioOriginal, setComentarioOriginal] = useState<Comentario | null>(null);
+
   // CARGAR DATOS
   async function cargarDatos() {
     try {
@@ -40,6 +42,7 @@ function AnalisisNLPPage() {
       // Limpiar resultados anteriores para no mezclarlos
 
       // con los de otro comentario.
+      setComentarioOriginal(null);
       setTexto("");
       setResultadoTexto(null);
       setClasificacion(null);
@@ -68,6 +71,7 @@ function AnalisisNLPPage() {
       }
 
       // Mostrar el contenido original del último comentario.
+      setComentarioOriginal(ultimoComentario);
       setTexto(ultimoComentario.contenido);
 
       // Buscar el análisis de ESE comentario por su ID.
@@ -106,6 +110,7 @@ function AnalisisNLPPage() {
       }
     } catch (error) {
       console.error(error);
+      setComentarioOriginal(null);
       setTexto("");
       setResultadoTexto(null);
       setClasificacion(null);
@@ -137,6 +142,13 @@ function AnalisisNLPPage() {
     try {
       setProcesando(true);
       setError(null);
+      // Solo persistimos si el texto sigue siendo el comentario original.
+      // Una edición manual es una prueba y no sobrescribe datos del cliente.
+      if (comentarioOriginal && texto === comentarioOriginal.contenido) {
+        await analizarComentarioGuardado(comentarioOriginal.id);
+        await cargarDatos();
+        return;
+      }
       const [analisis, resultadoClasificacion] = await Promise.all([
         analizarTexto(texto.trim()),
         clasificarTexto(texto.trim()),
@@ -144,7 +156,7 @@ function AnalisisNLPPage() {
       setResultadoTexto(analisis);
       setClasificacion(resultadoClasificacion);
       setIdioma("es");
-      setAvisoComentario("Mostrando el resultado del análisis manual del texto.");
+      setAvisoComentario("Prueba de texto libre: resultado calculado sin guardar en Supabase.");
     } catch (error) {
       console.error(error);
       setError("No se pudo analizar el texto");
@@ -223,7 +235,7 @@ function AnalisisNLPPage() {
             <h2>Analizar comentario</h2>
             <p>
               Al entrar se muestra el último comentario recibido y su análisis
-              guardado. También puedes analizar otro texto manualmente.
+              guardado. Puedes actualizar ese análisis o editar el texto para hacer una prueba sin guardar.
             </p>
           </div>
           <span className="panel-badge">NLTK</span>
@@ -236,6 +248,7 @@ function AnalisisNLPPage() {
               id="texto-nlp"
               rows={5}
               value={texto}
+              disabled={procesando || comentarioProcesando !== null}
               onChange={(evento) => {
                 setTexto(evento.target.value);
                 setResultadoTexto(null);
@@ -249,8 +262,9 @@ function AnalisisNLPPage() {
             />
           </div>
           <div className="form-actions">
-            <button type="submit" className="primary-button" disabled={procesando}>
-              {procesando ? "Analizando..." : "Analizar con NLTK"}
+            <button type="submit" className="primary-button" disabled={procesando || comentarioProcesando !== null}>
+              {procesando ? "Analizando..." : comentarioOriginal && texto === comentarioOriginal.contenido
+                ? "Analizar y guardar" : "Analizar texto sin guardar"}
             </button>
           </div>
         </form>
@@ -357,7 +371,7 @@ function AnalisisNLPPage() {
                       <button
                         type="button"
                         className="primary-button"
-                        disabled={comentarioProcesando === comentario.id}
+                        disabled={procesando || comentarioProcesando !== null}
                         onClick={() => procesarComentario(comentario)}
                       >
                         {comentarioProcesando === comentario.id
@@ -442,6 +456,7 @@ function AnalisisNLPPage() {
                   <th>Categoría</th>
                   <th>Confianza</th>
                   <th>Fecha</th>
+                  <th>Acción</th>
                 </tr>
               </thead>
               <tbody>
@@ -462,6 +477,17 @@ function AnalisisNLPPage() {
                       {analisis.fecha_analisis
                         ? new Date(analisis.fecha_analisis).toLocaleString()
                         : "—"}
+                    </td>
+                    <td>
+                      <button type="button" className="primary-button"
+                        disabled={procesando || comentarioProcesando !== null}
+                        onClick={() => {
+                          const comentario = comentarios.find(item => item.id === analisis.comentario_id);
+                          if (comentario) void procesarComentario(comentario);
+                          else setError("No se encontró el comentario. Recarga la página.");
+                        }}>
+                        {comentarioProcesando === analisis.comentario_id ? "Guardando..." : "Reanalizar y guardar"}
+                      </button>
                     </td>
                   </tr>
                 ))}
