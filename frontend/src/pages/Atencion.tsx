@@ -11,6 +11,14 @@ import {
 } from "../services/tiempoAtencion";
 import { obtenerAnalisisNLP, type AnalisisNLP } from "../services/nlp";
 
+const bandejas = [
+  ["TODOS", "Todos"], ["VENTAS", "Ventas"], ["SOPORTE", "Soporte"],
+  ["RECLAMO", "Reclamos"], ["CONSULTA", "Consultas"],
+  ["FELICITACION", "Felicitaciones"], ["OTROS", "Otros"],
+  ["SIN_ANALIZAR", "Sin analizar"], ["SIN_CATEGORIA", "Sin categoría"],
+] as const;
+type Bandeja = typeof bandejas[number][0];
+
 function Atencion() {
   const location = useLocation();
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -18,6 +26,9 @@ function Atencion() {
   const [tiempos, setTiempos] = useState<TiempoAtencion[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [bandeja, setBandeja] = useState<Bandeja>("TODOS");
+  const [falloCarga, setFalloCarga] = useState(false);
 
   // FORMULARIO TIEMPO
   const [clienteTiempo, setClienteTiempo] = useState("");
@@ -30,6 +41,7 @@ function Atencion() {
   async function cargarDatos() {
     try {
       setCargando(true);
+      setFalloCarga(false);
       const [datosClientes, datosComentarios, datosTiempos, datosAnalisis] =
         await Promise.all([
           obtenerClientes(),
@@ -44,7 +56,8 @@ function Atencion() {
       setError(null);
     } catch (error) {
       console.error(error);
-      setError("No se pudieron cargar los datos de atención");
+      setFalloCarga(true);
+      setError("No se pudieron cargar los datos de atención. Pulsa Actualizar bandejas para reintentar.");
     } finally {
       setCargando(false);
     }
@@ -120,10 +133,12 @@ function Atencion() {
       clientes: new Map(clientes.map((cliente) => [cliente.id, cliente])),
       comentarios: new Map(comentarios.map((comentario) => [comentario.id, comentario])),
 
-      // Al invertir una copia se conserva el primer análisis si hay varios por comentario.
-      analisis: new Map(
-        [...analisisGuardados].reverse().map((item) => [item.comentario_id, item]),
-      ),
+      // Usar el mayor ID como en el backend, sin depender del orden recibido.
+      analisis: analisisGuardados.reduce((mapa, item) => {
+        const anterior = mapa.get(item.comentario_id);
+        if (!anterior || item.id > anterior.id) mapa.set(item.comentario_id, item);
+        return mapa;
+      }, new Map<number, AnalisisNLP>()),
     }),
     [clientes, comentarios, analisisGuardados],
   );
@@ -143,13 +158,25 @@ function Atencion() {
       .trim();
     return nombreCompleto || nombreCliente(comentario.cliente_id);
   }
-  function categoriaNLP(comentario: Comentario) {
-    const analisis = indices.analisis.get(comentario.id);
-    return (
-      analisis?.categoria_detectada ??
-      (comentario.procesado ? "Sin categoría detectada" : "Pendiente")
-    );
+  function bandejaComentario(comentario: Comentario): Bandeja {
+    if (!comentario.procesado) return "SIN_ANALIZAR";
+    const categoria = indices.analisis.get(comentario.id)?.categoria_detectada?.trim().toUpperCase();
+    // No usar la categoría manual ni convertir categorías desconocidas en OTROS.
+    return bandejas.find(([clave]) => !["TODOS", "SIN_ANALIZAR", "SIN_CATEGORIA"].includes(clave)
+      && clave === categoria)?.[0] ?? "SIN_CATEGORIA";
   }
+  function categoriaNLP(comentario: Comentario) {
+    const clave = bandejaComentario(comentario);
+    return bandejas.find(([valor]) => valor === clave)?.[1] ?? "Sin categoría";
+  }
+  const conteos: Record<string, number> = { TODOS: comentarios.length };
+  for (const comentario of comentarios) {
+    const clave = bandejaComentario(comentario);
+    conteos[clave] = (conteos[clave] ?? 0) + 1;
+  }
+  const comentariosFiltrados = bandeja === "TODOS" ? comentarios
+    : comentarios.filter(comentario => bandejaComentario(comentario) === bandeja);
+
   function nombreEnTiempo(tiempo: TiempoAtencion) {
     const comentario =
       tiempo.comentario_id == null
@@ -240,67 +267,92 @@ function Atencion() {
         <div className="panel-header">
           <div>
             <h2>Comentarios</h2>
-            <p>{comentarios.length} registros</p>
+            <p>Organizados por la clasificación automática de NLTK. Todos los trabajadores
+              pueden ver estas bandejas.</p>
           </div>
         </div>
-        {cargando ? (
-          <Loading texto="Cargando datos de atención..." />
-        ) : comentarios.length === 0 ? (
-          <p>No existen comentarios.</p>
-        ) : (
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Nombre y apellido</th>
-                  <th>Empresa</th>
-                  <th>Teléfono</th>
-                  <th>Correo</th>
-                  <th>Comentario</th>
-                  <th>Canal</th>
-                  <th>Categoría NLTK</th>
-                  <th>NLP</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {comentarios.map((comentario) => (
-                  <tr key={comentario.id}>
-                    <td>{comentario.id}</td>
-                    <td>{nombreRemitente(comentario)}</td>
-                    <td>{comentario.empresa_cliente || "—"}</td>
-                    <td>{comentario.telefono_cliente || "—"}</td>
-                    <td>{comentario.correo_cliente || "—"}</td>
-                    <td>{comentario.contenido}</td>
-                    <td>{comentario.canal}</td>
-                    <td>{categoriaNLP(comentario)}</td>
-                    <td>
-                      <span
-                        className={
-                          comentario.procesado
-                            ? "status-active"
-                            : "status-inactive"
-                        }
-                      >
-                        {comentario.procesado ? "Procesado" : "Pendiente"}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="delete-button"
-                        onClick={() => borrarComentario(comentario)}
-                      >
-                        Eliminar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <button type="button" className="secondary-button" disabled={cargando}
+          onClick={() => void cargarDatos()}>Actualizar bandejas</button>
+        {!cargando && !falloCarga && (
+          <>
+            <div className="attention-inboxes" role="group" aria-label="Filtrar comentarios por categoría">
+              {bandejas.map(([clave, etiqueta]) => (
+                <button key={clave} type="button" className="attention-inbox"
+                  aria-pressed={bandeja === clave} aria-controls="attention-comments-result"
+                  onClick={() => setBandeja(clave)}>
+                  {etiqueta} <span>{conteos[clave] ?? 0}</span>
+                </button>
+              ))}
+            </div>
+            <p role="status">{comentariosFiltrados.length} de {comentarios.length} comentarios
+              en {bandejas.find(([clave]) => clave === bandeja)?.[1]}.</p>
+            {bandeja === "SIN_CATEGORIA" && <p>El comentario figura como procesado,
+              pero falta una categoría reconocida. Revisa o reanaliza su resultado en Inteligencia NLP.</p>}
+            {bandeja === "SIN_ANALIZAR" && <p>Puedes procesar estos comentarios desde Inteligencia NLP.</p>}
+          </>
         )}
+        <div id="attention-comments-result" aria-busy={cargando}>
+          {cargando ? (
+            <Loading texto="Cargando datos de atención..." />
+          ) : falloCarga ? (
+            <p>No se pueden mostrar las bandejas hasta cargar los comentarios y sus análisis.</p>
+          ) : comentariosFiltrados.length === 0 ? (
+            <p>{comentarios.length ? "No hay comentarios en esta bandeja." : "No existen comentarios."}</p>
+          ) : (
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nombre y apellido</th>
+                    <th>Empresa</th>
+                    <th>Teléfono</th>
+                    <th>Correo</th>
+                    <th>Comentario</th>
+                    <th>Canal</th>
+                    <th>Categoría NLTK</th>
+                    <th>NLP</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {comentariosFiltrados.map((comentario) => (
+                    <tr key={comentario.id}>
+                      <td>{comentario.id}</td>
+                      <td>{nombreRemitente(comentario)}</td>
+                      <td>{comentario.empresa_cliente || "—"}</td>
+                      <td>{comentario.telefono_cliente || "—"}</td>
+                      <td>{comentario.correo_cliente || "—"}</td>
+                      <td>{comentario.contenido}</td>
+                      <td>{comentario.canal}</td>
+                      <td>{categoriaNLP(comentario)}</td>
+                      <td>
+                        <span
+                          className={
+                            comentario.procesado
+                              ? "status-active"
+                              : "status-inactive"
+                          }
+                        >
+                          {comentario.procesado ? "Procesado" : "Pendiente"}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="delete-button"
+                          onClick={() => borrarComentario(comentario)}
+                        >
+                          Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </section>
       {/* TIEMPOS */}
       <section id="tiempos" className="dashboard-panel">

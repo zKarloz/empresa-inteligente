@@ -3357,3 +3357,123 @@ body {
     animation: none;
   }
 }
+
+
+/* Gráfica de interpolación: círculos conocidos y rombos estimados. */
+.interpolation-chart {
+  margin: 20px 0;
+  width: 100%;
+  min-width: 0;
+}
+
+.interpolation-chart figcaption p {
+  line-height: 1.6;
+  color: #475569;
+}
+
+.interpolation-chart-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.interpolation-chart svg {
+  display: block;
+  width: 100%;
+  min-width: 540px;
+  height: auto;
+}
+
+.interpolation-chart svg text {
+  fill: #475569;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.interpolation-chart-grid {
+  stroke: #e2e8f0;
+  stroke-width: 1;
+}
+
+.interpolation-chart-axis {
+  stroke: #64748b;
+  stroke-width: 1;
+}
+
+.interpolation-chart-line {
+  fill: none;
+  stroke: #4f46e5;
+  stroke-width: 2;
+}
+
+.interpolation-chart-known {
+  fill: #4f46e5;
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+
+.interpolation-chart-estimate {
+  fill: #fff;
+  stroke: #b45309;
+  stroke-width: 2;
+}
+
+.interpolation-chart-legend {
+  color: #334155;
+  font-size: 14px;
+}
+
+.interpolation-chart summary {
+  cursor: pointer;
+  padding: 10px 0;
+}
+
+.interpolation-chart summary:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 3px;
+}
+
+/* Atención: bandejas por categoría NLP, sin duplicar comentarios. */
+.attention-inboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0 12px;
+}
+
+.attention-inbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  background: #fff;
+  color: #334155;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.attention-inbox span {
+  padding: 2px 7px;
+  border-radius: 8px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 12px;
+}
+
+.attention-inbox:hover {
+  background: #f1f5f9;
+}
+
+.attention-inbox[aria-pressed="true"] {
+  background: #4338ca;
+  border-color: #4338ca;
+  color: #fff;
+  font-weight: 700;
+}
+
+.attention-inbox:focus-visible {
+  outline: 3px solid #818cf8;
+  outline-offset: 3px;
+}

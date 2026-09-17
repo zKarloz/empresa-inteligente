@@ -177,6 +177,7 @@ empresa-inteligente-Carlos
 │  │     └─ __init__.py
 │  ├─ requirements.txt
 │  └─ scripts
+│     ├─ evaluar_metricas.py
 │     ├─ evaluar_nlp.py
 │     ├─ generar_password_hash.py
 │     └─ migrar_administrador.py
@@ -207,6 +208,7 @@ empresa-inteligente-Carlos
 │  │  │  ├─ FaceLogin.tsx
 │  │  │  ├─ FaceRecognition.tsx
 │  │  │  ├─ GestionUsuarios.tsx
+│  │  │  ├─ GraficaInterpolacion.tsx
 │  │  │  ├─ Loading.tsx
 │  │  │  ├─ ProtectedRoute.tsx
 │  │  │  └─ Sidebar.tsx
