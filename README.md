@@ -129,120 +129,11 @@ En otra terminal, entra a `frontend` y ejecuta `npm run dev`.
 # Estructura del proyecto (Última modificación: 1:56 AM - 15/09/2026)
 
 ```
-empresa-inteligente
-├─ backend
-│  ├─ app
-│  │  ├─ api
-│  │  │  ├─ biometria.py
-│  │  │  ├─ clientes.py
-│  │  │  ├─ comentarios.py
-│  │  │  ├─ dashboard.py
-│  │  │  ├─ metricas.py
-│  │  │  ├─ nltk.py
-│  │  │  ├─ scipy.py
-│  │  │  ├─ tiempos_atencion.py
-│  │  │  └─ __init__.py
-│  │  ├─ core
-│  │  │  ├─ config.py
-│  │  │  └─ security.py
-│  │  ├─ database
-│  │  │  ├─ base.py
-│  │  │  ├─ connection.py
-│  │  │  ├─ models.py
-│  │  │  └─ __init__.py
-│  │  ├─ main.py
-│  │  ├─ models
-│  │  │  ├─ analisis_nlp.py
-│  │  │  ├─ cliente.py
-│  │  │  ├─ comentario.py
-│  │  │  ├─ optimizacion.py
-│  │  │  ├─ tiempo_atencion.py
-│  │  │  └─ __init__.py
-│  │  ├─ schemas
-│  │  │  ├─ biometria.py
-│  │  │  ├─ cliente.py
-│  │  │  ├─ comentario.py
-│  │  │  ├─ dashboard.py
-│  │  │  ├─ metrica.py
-│  │  │  ├─ nlp.py
-│  │  │  ├─ tiempo_atencion.py
-│  │  │  └─ __init__.py
-│  │  └─ services
-│  │     ├─ biometria_service.py
-│  │     ├─ comentario_nlp_service.py
-│  │     ├─ nltk_service.py
-│  │     ├─ scipy_service.py
-│  │     └─ __init__.py
-│  └─ requirements.txt
-├─ database
-│  ├─ 001_schema.sql
-│  └─ 002_seed.sql
-├─ docker-compose.yml
-├─ frontend
-│  ├─ eslint.config.js
-│  ├─ index.html
-│  ├─ package-lock.json
-│  ├─ package.json
-│  ├─ public
-│  │  ├─ favicon.svg
-│  │  └─ icons.svg
-│  ├─ README.md
-│  ├─ src
-│  │  ├─ App.css
-│  │  ├─ App.tsx
-│  │  ├─ assets
-│  │  │  ├─ hero.png
-│  │  │  ├─ react.svg
-│  │  │  └─ vite.svg
-│  │  ├─ components
-│  │  │  ├─ FaceLogin.tsx
-│  │  │  ├─ FaceRecognition.tsx
-│  │  │  ├─ Loading.tsx
-│  │  │  ├─ ProtectedRoute.tsx
-│  │  │  └─ Sidebar.tsx
-│  │  ├─ index.css
-│  │  ├─ layouts
-│  │  │  └─ DashboardLayout.tsx
-│  │  ├─ main.tsx
-│  │  ├─ pages
-│  │  │  ├─ AnalisisNLP.tsx
-│  │  │  ├─ Atencion.tsx
-│  │  │  ├─ Clientes.tsx
-│  │  │  ├─ Comentarios.tsx
-│  │  │  ├─ Configuracion.tsx
-│  │  │  ├─ Dashboard.tsx
-│  │  │  ├─ LandingPage.tsx
-│  │  │  ├─ Login.tsx
-│  │  │  ├─ Metricas.tsx
-│  │  │  ├─ Optimizacion.tsx
-│  │  │  └─ Reportes.tsx
-│  │  ├─ routes
-│  │  │  └─ AppRoutes.tsx
-│  │  └─ services
-│  │     ├─ api.ts
-│  │     ├─ biometria.ts
-│  │     ├─ clientes.ts
-│  │     ├─ comentarios.ts
-│  │     ├─ dashboard.ts
-│  │     ├─ facialRecognition.ts
-│  │     ├─ nlp.ts
-│  │     ├─ nltk.ts
-│  │     ├─ scipy.ts
-│  │     └─ tiempoAtencion.ts
-│  ├─ tsconfig.app.json
-│  ├─ tsconfig.json
-│  ├─ tsconfig.node.json
-│  ├─ vercel.json
-│  └─ vite.config.ts
-└─ README.md
-
-```
-
-```
 empresa-inteligente-Carlos
 ├─ backend
 │  ├─ app
 │  │  ├─ api
+│  │  │  ├─ auth.py
 │  │  │  ├─ biometria.py
 │  │  │  ├─ clientes.py
 │  │  │  ├─ comentarios.py
@@ -280,13 +171,20 @@ empresa-inteligente-Carlos
 │  │  └─ services
 │  │     ├─ biometria_service.py
 │  │     ├─ comentario_nlp_service.py
+│  │     ├─ datos_nlp.py
 │  │     ├─ nltk_service.py
 │  │     ├─ scipy_service.py
 │  │     └─ __init__.py
-│  └─ requirements.txt
+│  ├─ requirements.txt
+│  └─ scripts
+│     ├─ evaluar_nlp.py
+│     ├─ generar_password_hash.py
+│     └─ migrar_administrador.py
 ├─ database
 │  ├─ 001_schema.sql
-│  └─ 002_seed.sql
+│  ├─ 002_seed.sql
+│  ├─ 003_auth_sessions.sql
+│  └─ 004_usuarios.sql
 ├─ docker-compose.yml
 ├─ frontend
 │  ├─ eslint.config.js
@@ -305,11 +203,15 @@ empresa-inteligente-Carlos
 │  │  │  ├─ react.svg
 │  │  │  └─ vite.svg
 │  │  ├─ components
+│  │  │  ├─ CambiarPassword.tsx
 │  │  │  ├─ FaceLogin.tsx
 │  │  │  ├─ FaceRecognition.tsx
+│  │  │  ├─ GestionUsuarios.tsx
 │  │  │  ├─ Loading.tsx
 │  │  │  ├─ ProtectedRoute.tsx
 │  │  │  └─ Sidebar.tsx
+│  │  ├─ hooks
+│  │  │  └─ useCamaraFacial.ts
 │  │  ├─ index.css
 │  │  ├─ layouts
 │  │  │  └─ DashboardLayout.tsx
@@ -330,6 +232,7 @@ empresa-inteligente-Carlos
 │  │  │  └─ AppRoutes.tsx
 │  │  └─ services
 │  │     ├─ api.ts
+│  │     ├─ auth.ts
 │  │     ├─ biometria.ts
 │  │     ├─ clientes.ts
 │  │     ├─ comentarios.ts

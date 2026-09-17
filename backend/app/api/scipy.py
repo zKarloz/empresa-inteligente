@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,6 +32,18 @@ router = APIRouter(
 )
 
 
+def consulta_tiempos(fecha_inicio: date | None, fecha_fin: date | None):
+    # Los límites incluyen ambos días; se filtra la fecha de atención, no created_at.
+    if fecha_inicio and fecha_fin and fecha_inicio > fecha_fin:
+        raise HTTPException(status_code=422, detail="La fecha inicial no puede superar la final")
+    consulta = select(TiempoAtencion.tiempo_minutos, TiempoAtencion.fecha)
+    if fecha_inicio:
+        consulta = consulta.where(TiempoAtencion.fecha >= fecha_inicio)
+    if fecha_fin:
+        consulta = consulta.where(TiempoAtencion.fecha <= fecha_fin)
+    return consulta
+
+
 # ============================================
 # OBTENER ESTADÍSTICAS
 # ============================================
@@ -39,10 +53,12 @@ router = APIRouter(
     response_model=EstadisticasResponse
 )
 async def obtener_estadisticas(
+    fecha_inicio: date | None = None,
+    fecha_fin: date | None = None,
     db: AsyncSession = Depends(get_db)
 ):
     resultado = await db.execute(
-        select(TiempoAtencion.tiempo_minutos)
+        consulta_tiempos(fecha_inicio, fecha_fin)
     )
 
     registros = resultado.scalars().all()
@@ -50,7 +66,7 @@ async def obtener_estadisticas(
     if not registros:
         raise HTTPException(
             status_code=404,
-            detail="No existen tiempos de atención registrados"
+            detail="No existen tiempos de atención en el periodo seleccionado"
         )
 
     valores = [
@@ -58,9 +74,10 @@ async def obtener_estadisticas(
         for valor in registros
     ]
 
-    estadisticas = calcular_estadisticas(
-        valores
-    )
+    try:
+        estadisticas = calcular_estadisticas(valores)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
 
     return estadisticas
 
@@ -75,13 +92,12 @@ async def obtener_estadisticas(
     status_code=status.HTTP_201_CREATED
 )
 async def guardar_estadisticas(
+    fecha_inicio: date | None = None,
+    fecha_fin: date | None = None,
     db: AsyncSession = Depends(get_db)
 ):
     resultado = await db.execute(
-        select(
-            TiempoAtencion.tiempo_minutos,
-            TiempoAtencion.fecha
-        )
+        consulta_tiempos(fecha_inicio, fecha_fin)
     )
 
     registros = resultado.all()
@@ -89,7 +105,7 @@ async def guardar_estadisticas(
     if not registros:
         raise HTTPException(
             status_code=404,
-            detail="No existen tiempos de atención registrados"
+            detail="No existen tiempos de atención en el periodo seleccionado"
         )
 
     valores = [
@@ -110,13 +126,14 @@ async def guardar_estadisticas(
             detail="Los registros no tienen fechas válidas"
         )
 
-    estadisticas = calcular_estadisticas(
-        valores
-    )
+    try:
+        estadisticas = calcular_estadisticas(valores)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
 
     nueva_metrica = MetricaEstadistica(
-        fecha_inicio=min(fechas),
-        fecha_fin=max(fechas),
+        fecha_inicio=fecha_inicio or min(fechas),
+        fecha_fin=fecha_fin or max(fechas),
 
         cantidad_registros=estadisticas[
             "cantidad"
@@ -228,14 +245,10 @@ async def optimizar(
     }
 
     resultado_guardar = {
-        "recurso_a":
-            resultado["recurso_a"],
-
-        "recurso_b":
-            resultado["recurso_b"],
-
-        "ahorro":
-            resultado["ahorro"]
+        clave: resultado[clave] for clave in (
+            "recurso_a", "recurso_b", "ahorro", "capacidad_inicial",
+            "capacidad_optima", "inicial_factible"
+        )
     }
 
     nueva_optimizacion = Optimizacion(

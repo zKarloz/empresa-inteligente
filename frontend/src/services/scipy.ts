@@ -5,7 +5,7 @@ export interface Estadisticas {
   cantidad: number;
   media: number;
   mediana: number;
-  desviacion_estandar: number;
+  desviacion_estandar: number | null;
   minimo: number;
   maximo: number;
   percentil_25: number;
@@ -71,6 +71,9 @@ export interface OptimizacionResponse {
     recurso_a: number;
     recurso_b: number;
     ahorro: number;
+    capacidad_inicial?: number;
+    capacidad_optima?: number;
+    inicial_factible?: boolean;
   } | null;
 
   costo_inicial: number | null;
@@ -80,16 +83,30 @@ export interface OptimizacionResponse {
 }
 
 
-export function obtenerEstadisticas() {
+export interface FiltroFechas {
+  fecha_inicio?: string;
+  fecha_fin?: string;
+}
+
+// GET y POST utilizan exactamente los mismos límites.
+function rutaEstadisticas(filtro: FiltroFechas): string {
+  const parametros = new URLSearchParams();
+  if (filtro.fecha_inicio) parametros.set("fecha_inicio", filtro.fecha_inicio);
+  if (filtro.fecha_fin) parametros.set("fecha_fin", filtro.fecha_fin);
+  const consulta = parametros.toString();
+  return `/api/scipy/estadisticas${consulta ? `?${consulta}` : ""}`;
+}
+
+export function obtenerEstadisticas(filtro: FiltroFechas = {}) {
   return apiFetch<Estadisticas>(
-    "/api/scipy/estadisticas"
+    rutaEstadisticas(filtro)
   );
 }
 
 
-export function guardarEstadisticas() {
+export function guardarEstadisticas(filtro: FiltroFechas = {}) {
   return apiFetch<MetricaGuardada>(
-    "/api/scipy/estadisticas",
+    rutaEstadisticas(filtro),
     {
       method: "POST",
     }

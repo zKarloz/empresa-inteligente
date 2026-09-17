@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { ApiError } from "../services/api";
 import Loading from "../components/Loading";
 import {
   obtenerEstadisticas,
   guardarEstadisticas,
   interpolar,
   optimizar,
+  type FiltroFechas,
   type Estadisticas,
   type MetricaGuardada,
   type InterpolacionResponse,
@@ -39,6 +41,14 @@ function Metricas() {
   const [error, setError] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
+  const [filtroAplicado, setFiltroAplicado] = useState<FiltroFechas>({});
+  const [sinDatos, setSinDatos] = useState(false);
+  const solicitud = useRef(0);
+  const filtroPendiente = fechaInicio !== (filtroAplicado.fecha_inicio ?? "")
+    || fechaFin !== (filtroAplicado.fecha_fin ?? "");
+
   // INTERPOLACIÓN
   const [xConocidos, setXConocidos] = useState("1, 3, 4, 6");
   const [yConocidos, setYConocidos] = useState("12000, 14500, 15000, 18000");
@@ -53,23 +63,46 @@ function Metricas() {
   const [recursoB, setRecursoB] = useState("4");
   const [capacidadMinima, setCapacidadMinima] = useState("40");
 
-  // CARGAR ESTADÍSTICAS
-  async function cargarEstadisticas() {
+  // Cada respuesta pertenece a un periodo; ignorar respuestas antiguas.
+  async function cargarEstadisticas(filtro: FiltroFechas = {}) {
+    const id = ++solicitud.current;
+    setCargando(true);
+    setEstadisticas(null);
+    setMetricaGuardada(null);
+    setMensaje(null);
+    setError(null);
+    setSinDatos(false);
+    setFiltroAplicado(filtro);
     try {
-      setCargando(true);
-      const datos = await obtenerEstadisticas();
-      setEstadisticas(datos);
-      setError(null);
+      const datos = await obtenerEstadisticas(filtro);
+      if (id === solicitud.current) setEstadisticas(datos);
     } catch (error) {
-      console.error(error);
-      setError("No se pudieron cargar las estadísticas");
+      if (id !== solicitud.current) return;
+      if (error instanceof ApiError && error.status === 404) setSinDatos(true);
+      else setError("No se pudieron cargar las estadísticas del periodo.");
     } finally {
-      setCargando(false);
+      if (id === solicitud.current) setCargando(false);
     }
   }
   useEffect(() => {
-    cargarEstadisticas();
+    void cargarEstadisticas();
+    return () => { solicitud.current += 1; };
   }, []);
+
+  function aplicarFechas(evento: React.FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    if (fechaInicio && fechaFin && fechaInicio > fechaFin) {
+      setError("La fecha inicial no puede superar la final.");
+      return;
+    }
+    void cargarEstadisticas({ fecha_inicio: fechaInicio, fecha_fin: fechaFin });
+  }
+
+  function mostrarTodo() {
+    setFechaInicio("");
+    setFechaFin("");
+    void cargarEstadisticas();
+  }
 
   // NAVEGACIÓN DESDE EL SIDEBAR
   useEffect(() => {
@@ -95,16 +128,25 @@ function Metricas() {
 
   // GUARDAR MÉTRICA
   async function ejecutarGuardarEstadisticas() {
+    if (procesando || cargando || filtroPendiente || !estadisticas) return;
     try {
       setProcesando(true);
       setError(null);
       setMensaje(null);
-      const resultado = await guardarEstadisticas();
+      const resultado = await guardarEstadisticas(filtroAplicado);
       setMetricaGuardada(resultado);
+      // Mostrar lo efectivamente guardado si llegaron nuevos registros entre consultas.
+      setEstadisticas({
+        cantidad: resultado.cantidad_registros,
+        media: resultado.media!, mediana: resultado.mediana!,
+        desviacion_estandar: resultado.desviacion_estandar,
+        minimo: resultado.minimo!, maximo: resultado.maximo!,
+        percentil_25: resultado.percentil_25!, percentil_75: resultado.percentil_75!,
+      });
       setMensaje("Las estadísticas se guardaron correctamente.");
     } catch (error) {
       console.error(error);
-      setError("No se pudieron guardar las estadísticas");
+      setError("No se pudieron guardar las estadísticas. Revisa el periodo y los tiempos registrados.");
     } finally {
       setProcesando(false);
     }
@@ -146,8 +188,8 @@ function Metricas() {
       setError("Los valores de optimización deben ser numéricos");
       return;
     }
-    if (valorA < 0 || valorB < 0 || capacidad <= 0) {
-      setError("Los recursos no pueden ser negativos y la capacidad debe ser mayor que cero");
+    if (valorA < 0 || valorA > 10 || valorB < 0 || valorB > 10 || capacidad <= 0 || capacidad > 150) {
+      setError("Cada recurso debe estar entre 0 y 10; la capacidad debe ser mayor que 0 y como máximo 150");
       return;
     }
     try {
@@ -164,7 +206,7 @@ function Metricas() {
       setResultadoOptimizacion(resultado);
     } catch (error) {
       console.error(error);
-      setError("No se pudo realizar la optimización");
+      setError("No se pudo optimizar. Comprueba los límites, el nombre (hasta 150 caracteres) y la descripción (hasta 2000).");
     } finally {
       setProcesando(false);
     }
@@ -195,11 +237,37 @@ function Metricas() {
             type="button"
             className="primary-button"
             onClick={ejecutarGuardarEstadisticas}
-            disabled={procesando || !estadisticas}
+            disabled={procesando || cargando || filtroPendiente || !estadisticas}
           >
             Guardar métricas
           </button>
         </div>
+        <form className="client-form" onSubmit={aplicarFechas}>
+          <div className="form-grid">
+            <div className="form-group">
+              <label htmlFor="metricas-desde">Desde</label>
+              <input id="metricas-desde" type="date" value={fechaInicio}
+                disabled={cargando || procesando} max={fechaFin || undefined}
+                onChange={e => setFechaInicio(e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label htmlFor="metricas-hasta">Hasta</label>
+              <input id="metricas-hasta" type="date" value={fechaFin}
+                disabled={cargando || procesando} min={fechaInicio || undefined}
+                onChange={e => setFechaFin(e.target.value)} />
+            </div>
+          </div>
+          <div className="form-actions">
+            <button className="primary-button" type="submit" disabled={cargando || procesando}>Aplicar fechas</button>
+            <button className="secondary-button" type="button" disabled={cargando || procesando}
+              onClick={mostrarTodo}>Ver todo</button>
+          </div>
+        </form>
+        <p role="status">
+          Periodo aplicado: {filtroAplicado.fecha_inicio || "desde el primer registro"}
+          {" — "}{filtroAplicado.fecha_fin || "hasta el último registro"}. Ambos días incluidos.
+          {filtroPendiente && " Hay cambios pendientes: pulsa Aplicar fechas antes de guardar."}
+        </p>
         {cargando ? (
           <Loading texto="Calculando estadísticas..." />
         ) : estadisticas ? (
@@ -211,12 +279,24 @@ function Metricas() {
             {indicadores.map(({ campo, etiqueta }) => (
               <div className="scientific-card" key={campo}>
                 <span>{etiqueta}</span>
-                <strong>{estadisticas[campo].toFixed(2)}</strong>
+                <strong>{estadisticas[campo]?.toFixed(2) ?? "No disponible"}</strong>
               </div>
             ))}
           </div>
         ) : (
-          <p>No existen datos estadísticos.</p>
+          <p>{sinDatos ? "No hay tiempos de atención en este periodo." : "No hay estadísticas disponibles."}</p>
+        )}
+        {estadisticas && !cargando && (
+          <div className="scientific-result">
+            <h3>Cómo interpretar estos indicadores</h3>
+            <p>Los tiempos están expresados en minutos. La media es el promedio;
+              la mediana es el valor central y suele verse menos afectada por tiempos extremos.</p>
+            <p>Los percentiles 25 y 75 delimitan aproximadamente el 50 % central de los tiempos.
+              Su diferencia es {(estadisticas.percentil_75 - estadisticas.percentil_25).toFixed(2)} minutos.</p>
+            <p>{estadisticas.cantidad < 2
+              ? "Solo hay un registro: no hay suficientes observaciones para estimar la desviación estándar muestral."
+              : `La desviación estándar muestral es ${estadisticas.desviacion_estandar?.toFixed(2)} minutos: describe la dispersión alrededor de la media. Para decidir si es aceptable hay que compararla con una meta de atención.`}</p>
+          </div>
         )}
         {metricaGuardada && (
           <div className="scientific-result">
@@ -225,6 +305,7 @@ function Metricas() {
               ID #{metricaGuardada.id}
               {" · "}
               {metricaGuardada.cantidad_registros} registros
+              {" · "}{metricaGuardada.fecha_inicio} — {metricaGuardada.fecha_fin}
             </span>
           </div>
         )}
@@ -294,6 +375,12 @@ function Metricas() {
           <div>
             <h2>Optimización</h2>
             <p>Minimización de costos bajo una restricción de capacidad</p>
+            <p>Escenario didáctico: A y B son cantidades divisibles de recursos (entre 0 y 10).
+              Cada unidad de A aporta 10 unidades de capacidad y cada unidad de B aporta 5.
+              La capacidad máxima es 150.</p>
+            <p>El costo es 80 × A + 50 × B + 10 × (A − 3)², expresado en unidades monetarias.
+              El último término penaliza alejar A de 3. Estos valores son supuestos del ejemplo,
+              no tarifas reales de la empresa ni cantidades de trabajadores.</p>
           </div>
           <span className="panel-badge">minimize</span>
         </div>
@@ -303,6 +390,7 @@ function Metricas() {
               <label>Nombre</label>
               <input
                 type="text"
+                maxLength={150}
                 value={nombreOptimizacion}
                 onChange={(evento) => setNombreOptimizacion(evento.target.value)}
               />
@@ -311,6 +399,7 @@ function Metricas() {
               <label>Descripción</label>
               <input
                 type="text"
+                maxLength={2000}
                 value={descripcionOptimizacion}
                 onChange={(evento) =>
                   setDescripcionOptimizacion(evento.target.value)
@@ -322,6 +411,7 @@ function Metricas() {
               <input
                 type="number"
                 min="0"
+                max="10"
                 step="0.01"
                 value={recursoA}
                 onChange={(evento) => setRecursoA(evento.target.value)}
@@ -332,6 +422,7 @@ function Metricas() {
               <input
                 type="number"
                 min="0"
+                max="10"
                 step="0.01"
                 value={recursoB}
                 onChange={(evento) => setRecursoB(evento.target.value)}
@@ -341,6 +432,7 @@ function Metricas() {
               <label>Capacidad mínima</label>
               <input
                 type="number"
+                max="150"
                 min="0.01"
                 step="0.01"
                 value={capacidadMinima}
@@ -357,6 +449,14 @@ function Metricas() {
         {resultadoOptimizacion && resultadoOptimizacion.resultado && (
           <div className="scientific-result">
             <h3>Resultado de optimización</h3>
+            <p>{resultadoOptimizacion.resultado.inicial_factible === false
+              ? "El escenario inicial no cubría la capacidad solicitada. La diferencia de costos no representa un ahorro entre alternativas que cumplen la misma demanda."
+              : resultadoOptimizacion.resultado.inicial_factible === true
+                ? "El escenario inicial cubría la capacidad. Una diferencia positiva representa una reducción estimada del costo dentro de este modelo."
+                : "Este resultado antiguo no incluye la comprobación de capacidad inicial. Ejecuta una nueva optimización."}</p>
+            <p>Capacidad inicial: {resultadoOptimizacion.resultado.capacidad_inicial?.toFixed(2) ?? "No disponible"}.
+              Capacidad optimizada: {resultadoOptimizacion.resultado.capacidad_optima?.toFixed(2) ?? "No disponible"}.
+              Demanda: {resultadoOptimizacion.parametros_entrada.capacidad_minima}.</p>
             <div className="scientific-grid">
               <div className="scientific-card">
                 <span>Recurso A óptimo</span>
@@ -381,7 +481,7 @@ function Metricas() {
                 </strong>
               </div>
               <div className="scientific-card">
-                <span>Ahorro</span>
+                <span>Diferencia de costos (inicial − optimizado)</span>
                 <strong>{resultadoOptimizacion.resultado.ahorro.toFixed(2)}</strong>
               </div>
             </div>
