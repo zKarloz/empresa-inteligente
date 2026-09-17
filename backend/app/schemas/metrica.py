@@ -1,13 +1,13 @@
 from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, model_validator
 
 
 class EstadisticasResponse(BaseModel):
     cantidad: int
     media: float
     mediana: float
-    desviacion_estandar: float
+    desviacion_estandar: float | None
     minimo: float
     maximo: float
     percentil_25: float
@@ -37,9 +37,22 @@ class MetricaEstadisticaResponse(BaseModel):
     )
 
 class InterpolacionRequest(BaseModel):
-    x_conocidos: list[float]
-    y_conocidos: list[float]
-    x_estimar: list[float]
+    model_config = ConfigDict(extra="forbid")
+    x_conocidos: list[FiniteFloat] = Field(min_length=2, max_length=1000)
+    y_conocidos: list[FiniteFloat] = Field(min_length=2, max_length=1000)
+    x_estimar: list[FiniteFloat] = Field(min_length=1, max_length=1000)
+
+    @model_validator(mode="after")
+    def comprobar_puntos(self):
+        if len(self.x_conocidos) != len(self.y_conocidos):
+            raise ValueError("X e Y deben tener la misma cantidad de puntos")
+        if len(set(self.x_conocidos)) != len(self.x_conocidos):
+            raise ValueError("Los X conocidos no pueden repetirse")
+        if len(set(self.x_estimar)) != len(self.x_estimar):
+            raise ValueError("Los X a estimar no pueden repetirse")
+        if any(x < min(self.x_conocidos) or x > max(self.x_conocidos) for x in self.x_estimar):
+            raise ValueError("Los puntos a estimar deben estar dentro del intervalo conocido")
+        return self
 
 
 class ValorInterpolado(BaseModel):
@@ -52,13 +65,14 @@ class InterpolacionResponse(BaseModel):
 
 
 class OptimizacionRequest(BaseModel):
-    nombre: str = "Optimización de recursos"
-    descripcion: str | None = None
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True, validate_default=True)
+    nombre: str = Field(default="Optimización de recursos", min_length=1, max_length=150)
+    descripcion: str | None = Field(default=None, max_length=2000)
 
-    recurso_a_inicial: float = 2
-    recurso_b_inicial: float = 4
+    recurso_a_inicial: FiniteFloat = Field(default=2, ge=0, le=10)
+    recurso_b_inicial: FiniteFloat = Field(default=4, ge=0, le=10)
 
-    capacidad_minima: float = 40
+    capacidad_minima: FiniteFloat = Field(default=40, gt=0, le=150)
 
 
 class OptimizacionResponse(BaseModel):
